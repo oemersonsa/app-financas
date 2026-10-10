@@ -23,7 +23,7 @@ A configuração segue o padrão de `oemersonsa/dashboard`: Node.js no Render e 
 2. Obtenha a URL `libsql://...` e um token do banco no painel do Turso.
 3. No Render, conecte este repositório usando o Blueprint `render.yaml`, ou crie um Web Service com build `npm ci && npm run check && npm test`, início `npm start` e health check `/health`.
 4. Configure as variáveis abaixo no painel do Render. Guarde token e senha apenas nos campos de ambiente privados, nunca no Git ou no chat.
-5. Após a implantação, acesse a URL HTTPS fornecida pelo Render, faça login e confirme um lançamento após recarregar e em outro navegador.
+5. Após a implantação, acesse a URL HTTPS fornecida pelo Render, entre pela tela de login e confirme um lançamento após recarregar e em outro navegador.
 
 | Variável | Configuração |
 | --- | --- |
@@ -47,6 +47,14 @@ O Blueprint indica o plano gratuito do Render. Esse plano pode suspender o servi
 - Entradas: registre salário e outras receitas. O resumo acompanha entradas, despesas e saldo do mês selecionado.
 
 Categorias principais: Moradia, Alimentação, Assinaturas, Lazer, Pensão, Dívidas de cartão e Empréstimos. Também é possível criar categorias.
+
+## Acesso e sessão
+
+Entre pela tela de login usando `FINANCAS_USER` e `FINANCAS_PASSWORD` configurados no Render. Não há cadastro público. A opção "Manter conectado" mantém o acesso por 30 dias; desmarcada, por um dia. O botão Sair encerra a sessão. Senha incorreta aparece como mensagem no formulário, sem janela de autenticação do navegador.
+
+As sessões persistem no Turso em `financas_sessions`; apenas o hash do token é armazenado no banco. O cookie é HttpOnly, SameSite=Lax e Secure em produção. Trocar usuário ou senha invalida as sessões anteriores. Reiniciar ou atualizar o serviço preserva sessões válidas. Tentativas repetidas de login são limitadas por instância.
+
+A senha de acesso continua obrigatória em produção. Não é necessário criar outra variável nem configurar tabelas manualmente para a nova tela.
 
 ## Salvamento e recuperação
 

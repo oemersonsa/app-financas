@@ -1,7 +1,8 @@
 import { createHash, timingSafeEqual } from 'node:crypto';
-export function authenticated(header, username, password) {
-  if (!password) return true;
-  const expected = `Basic ${Buffer.from(`${username}:${password}`).toString('base64')}`;
-  const digest = value => createHash('sha256').update(value).digest();
-  return timingSafeEqual(digest(header || ''), digest(expected));
+const digest = value => createHash('sha256').update(value).digest();
+export function credentialsMatch(actualUser, actualPassword, username, password) {
+  return timingSafeEqual(digest(JSON.stringify([actualUser, actualPassword])), digest(JSON.stringify([username, password])));
+}
+export function credentialVersion(username, password) {
+  return digest(JSON.stringify([username, password])).toString('hex');
 }

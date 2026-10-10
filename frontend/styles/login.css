@@ -1,0 +1,22 @@
+body { min-height: 100svh; display: grid; place-items: center; padding: 32px 20px; }
+.login-card { width: min(100%, 430px); padding: 42px; border: 1px solid #ffffffd9; border-radius: 32px; background: #ffffff70; backdrop-filter: blur(28px); box-shadow: 0 24px 80px #3d596514, inset 0 1px 0 #fff; }
+.login-brand { display: grid; place-items: center; width: 54px; height: 54px; border-radius: 17px; background: var(--accent); color: white; font-size: 35px; font-weight: 750; position: relative; margin-bottom: 28px; }
+.login-brand span { position: absolute; right: 7px; bottom: 7px; font-size: 22px; }
+.eyebrow { font-size: 10px; font-weight: 750; letter-spacing: 2px; color: var(--muted); margin-bottom: 12px; }
+h1 { font-size: 34px; }
+.intro { margin-top: 12px; color: var(--muted); }
+form { margin-top: 30px; }
+form > label:not(.remember) { display: block; font-size: 12px; font-weight: 650; margin: 18px 0 8px; }
+input:not([type=checkbox]) { width: 100%; min-width: 0; padding: 14px; border: 1px solid #d4dfe1; border-radius: 13px; font: inherit; color: var(--ink); background: #ffffffad; }
+input:focus-visible, button:focus-visible { outline: 3px solid #397c8959; outline-offset: 3px; }
+.password-field { position: relative; }
+.password-field input { padding-right: 86px; }
+.password-field button { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); padding: 8px; border: 0; border-radius: 8px; font: inherit; font-size: 12px; color: var(--accent-dark); background: transparent; cursor: pointer; }
+.remember { display: flex; align-items: center; gap: 8px; margin: 18px 0 24px; font-size: 12px; color: var(--muted); }
+.remember input { accent-color: var(--accent); width: 16px; height: 16px; }
+.login-submit { width: 100%; padding: 15px; border: 1px solid #ffffff70; border-radius: 14px; color: white; background: var(--accent); font: inherit; font-weight: 650; cursor: pointer; box-shadow: 0 6px 18px #397c8926; }
+.login-submit:hover { background: var(--accent-dark); }
+.login-submit:disabled { opacity: .65; cursor: wait; }
+#loginError { color: #9d4641; font-size: 13px; padding-bottom: 16px; }
+.footer-note { text-align: center; font-size: 11px; color: var(--muted); margin-top: 26px; }
+@media (max-width: 480px) { .login-card { padding: 30px 24px; border-radius: 26px; } h1 { font-size: 30px; } }

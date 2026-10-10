@@ -9,6 +9,7 @@ export async function readServer() {
     cache: "no-store",
     signal: AbortSignal.timeout(15000),
   });
+  if (response.status === 401) { location.replace("/login.html"); throw new Error("session"); }
   if (!response.ok) throw new Error("server");
   const state = await response.json();
   if (
@@ -48,6 +49,7 @@ export async function commit(next, nextCategories = appState.categories) {
       }),
       signal: AbortSignal.timeout(15000),
     });
+    if (response.status === 401) { location.replace("/login.html"); throw new Error("session"); }
     if (response.status === 409) {
       const state = await readServer();
       appState.transactions = state.data.transactions;

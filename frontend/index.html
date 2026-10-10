@@ -41,9 +41,13 @@
       <header class="topbar">
         <span id="storageStatus" role="status"
           >Conectando ao banco de dados…</span
-        ><button class="button subtle" id="backupButton">
+        >
+        <div class="topbar-actions">
+        <button id="logoutButton" class="button subtle" type="button" hidden>Sair</button>
+        <button class="button subtle" id="backupButton">
           <span data-icon="download"></span> Backup
         </button>
+        </div>
       </header>
       <main id="overview">
         <section class="page-heading">

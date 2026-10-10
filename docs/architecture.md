@@ -8,7 +8,10 @@ app-financas/
 ├── backend/
 │   ├── assets.js              # Arquivos públicos e URLs portáveis
 │   ├── http.js                # Rotas, limites e arquivos públicos
-│   ├── auth.js                # Autenticação
+│   ├── auth.js                # Verificação de credenciais
+│   ├── sessions.js            # Cookies e sessões persistentes
+│   ├── login.js               # Login, logout e limite de tentativas
+│   ├── requests.js            # JSON e validação de origem
 │   ├── validation.js          # Validação do documento completo
 │   └── database.js            # Turso/SQLite, transações, revisões e histórico
 ├── frontend/
@@ -31,7 +34,7 @@ app-financas/
 
 As regras em `domain/` recebem dados e retornam resultados, sem acessar tela, API ou estado global. Controladores traduzem eventos em ações; serviços coordenam gravação e erros; a interface apresenta resultados. O estado está em `core/state.js`. O backend reutiliza a validação pura de lançamentos.
 
-`http.js` limita o corpo das requisições a 10 MB, valida origem e entrega exclusivamente arquivos do frontend. `auth.js` protege dados e arquivos; `/health` informa somente disponibilidade. `database.js` grava o documento e histórico em uma transação, com revisão para rejeitar sobrescritas concorrentes. `server.js` conecta essas responsabilidades.
+`http.js` limita o corpo das requisições a 10 MB, valida origem e entrega exclusivamente arquivos do frontend. `auth.js` verifica credenciais; `sessions.js` protege dados e arquivos com sessões armazenadas no banco; `/health` informa somente disponibilidade. `database.js` grava o documento e histórico em uma transação, com revisão para rejeitar sobrescritas concorrentes. `server.js` conecta essas responsabilidades.
 
 O formato da API permanece `{revision, data: {version, transactions, customCategories}}`. A abordagem de documento único simplifica exportação e recuperação para uso pessoal. As tabelas têm prefixo `financas_`. O desenvolvimento usa SQLite pelo mesmo driver; produção exige Turso. A migração da antiga tabela `state` é permitida apenas em bancos locais.
 
@@ -41,4 +44,4 @@ Coloque cálculos em `domain/`, estilos no arquivo da respectiva área e altera�
 
 ## Limites
 
-Há um único conjunto de finanças por implantação, protegido por usuário e senha. O cliente carrega dados ao abrir e detecta conflitos ao gravar; não há sincronização em tempo real nem contas separadas. O banco remoto permite reinícios sem perda de dados, mas a estrutura de documento único não foi projetada para um sistema de grande volume. Histórico no mesmo banco não substitui uma cópia externa.
+Há um único conjunto de finanças por implantação, protegido por usuário, senha e sessão. A tela de login não fornece cadastro público ou recuperação de senha; as credenciais são administradas nas variáveis do Render. O cliente carrega dados ao abrir e detecta conflitos ao gravar; não há sincronização em tempo real nem contas separadas. O banco remoto permite reinícios sem perda de dados, mas a estrutura de documento único não foi projetada para um sistema de grande volume. Histórico no mesmo banco não substitui uma cópia externa.

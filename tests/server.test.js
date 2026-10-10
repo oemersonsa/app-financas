@@ -62,10 +62,12 @@ test('only frontend files are public', async t => {
 });
 test('authentication protects data and files; health discloses only status', async t => {
   const f = await fixture(t, { password: 'test-secret' });
-  assert.equal((await f.get('/')).status, 401);
+  assert.equal((await fetch(f.url + '/', { redirect: 'manual' })).status, 303);
   assert.equal((await f.get('/api/state')).status, 401);
   assert.deepEqual(await (await f.get('/health')).json(), { status: 'ok' });
-  const response = await fetch(f.url + '/api/state', { headers: { Authorization: 'Basic ' + Buffer.from('usuario:test-secret').toString('base64') } });
+  const login = await fetch(f.url + '/api/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: 'usuario', password: 'test-secret', remember: true }) });
+  assert.equal(login.status, 200);
+  const response = await fetch(f.url + '/api/state', { headers: { Cookie: login.headers.get('set-cookie').split(';')[0] } });
   assert.equal(response.status, 200);
 });
 test('retention limits history to thirty versions', async t => {

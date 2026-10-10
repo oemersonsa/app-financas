@@ -1,5 +1,6 @@
 """Integração real com SQLite e Chromium. Requer Playwright Python e Chromium."""
 import json
+import os
 from pathlib import Path
 import tempfile
 import subprocess
@@ -216,6 +217,56 @@ class BrowserTests(unittest.TestCase):
             self.page.locator('a[href="#overview"]').click()
             self.assertTrue(self.page.evaluate('document.documentElement.scrollWidth <= innerWidth'),width)
             self.page.locator('a[href="#parcelas"]').click()
+
+    def test_login_remember_restart_and_logout(self):
+        env = os.environ.copy()
+        env.update(FINANCAS_USER='emerson', FINANCAS_PASSWORD='test-browser-password', NODE_ENV='development', HOST='127.0.0.1')
+        env.pop('TURSO_DATABASE_URL', None)
+        env.pop('TURSO_AUTH_TOKEN', None)
+        args = ['node','server.js','--port','0','--data-dir',str(Path(self.temp.name)/'login')]
+        def start():
+            process = subprocess.Popen(args, cwd=Path(__file__).resolve().parents[1], env=env, stdout=subprocess.PIPE, text=True)
+            info = json.loads(process.stdout.readline())
+            return process, f'http://127.0.0.1:{info["port"]}'
+        process, url = start()
+        context = self.browser.new_context(viewport={'width':390,'height':844})
+        restored = None
+        try:
+            page = context.new_page()
+            page.goto(url)
+            expect(page).to_have_url(url + '/login.html')
+            expect(page.locator('.login-card')).to_have_css('border-radius','26px')
+            self.assertTrue(page.evaluate('document.documentElement.scrollWidth <= innerWidth'))
+            page.locator('#username').fill('emerson')
+            page.locator('#password').fill('wrong')
+            page.locator('.login-submit').click()
+            expect(page.locator('#loginError')).to_contain_text('incorretos')
+            page.locator('#password').fill('test-browser-password')
+            page.locator('#showPassword').click()
+            expect(page.locator('#password')).to_have_attribute('type','text')
+            page.locator('.login-submit').click()
+            self.ready(page)
+            expect(page.locator('#logoutButton')).to_be_visible()
+            page.set_viewport_size({'width':320,'height':844})
+            self.assertTrue(page.evaluate('document.documentElement.scrollWidth <= innerWidth'))
+            state = context.storage_state()
+            self.assertEqual(state['origins'], [])
+            self.assertTrue(state['cookies'][0]['httpOnly'])
+            process.terminate(); process.wait(timeout=10); process.stdout.close()
+            process, url = start()
+            restored = self.browser.new_context(storage_state=state)
+            page = restored.new_page()
+            page.goto(url)
+            self.ready(page)
+            page.locator('#logoutButton').click()
+            expect(page).to_have_url(url + '/login.html')
+            page.goto(url)
+            expect(page).to_have_url(url + '/login.html')
+            self.assertEqual(restored.cookies(), [])
+        finally:
+            if restored: restored.close()
+            context.close()
+            process.terminate(); process.wait(timeout=10); process.stdout.close()
 
 
 if __name__ == '__main__':

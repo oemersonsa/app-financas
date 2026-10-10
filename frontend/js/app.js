@@ -1,3 +1,4 @@
+import { initializeSession } from "./controllers/session.js";
 import { loadData } from "./services/legacy.js";
 import { appState } from "./core/state.js";
 import { commit, readServer } from "./services/persistence.js";
@@ -80,3 +81,5 @@ bindBackup();
 render();
 showPage();
 initializeServer();
+
+initializeSession();
