@@ -1,0 +1,405 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#faf9f6" />
+    <title>Meu bolso — Finanças simples</title>
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Crect width='48' height='48' rx='14' fill='%23397889'/%3E%3Ctext x='10' y='34' fill='white' font-family='sans-serif' font-size='32' font-weight='bold'%3Em%3C/text%3E%3C/svg%3E"
+    />
+    <link rel="stylesheet" href="/styles/main.css" />
+    <script type="module" src="/js/app.js"></script>
+  </head>
+  <body>
+    <aside class="sidebar">
+      <a class="brand" href="./" aria-label="Meu bolso, início"
+        ><span class="brand-symbol">m<span>·</span></span
+        >meu bolso<span class="brand-dot">.</span></a
+      >
+      <div class="sidebar-body">
+        <p class="nav-label">SEU DIA A DIA</p>
+        <a class="nav-item active" href="#overview"
+          ><span data-icon="grid"></span> Visão geral</a
+        ><a class="nav-item" href="#transactions"
+          ><span data-icon="list"></span> Lançamentos</a
+        >
+        <a class="nav-item" href="#parcelas"
+          ><span data-icon="receipt"></span> Parcelas</a
+        >
+      </div>
+      <div class="sidebar-footer">
+        <span class="privacy-icon" data-icon="lock"></span>
+        <div>
+          <strong>Seu dinheiro, seu espaço.</strong>
+          <p>Dados salvos no servidor.</p>
+        </div>
+      </div>
+    </aside>
+    <div class="workspace">
+      <header class="topbar">
+        <span id="storageStatus" role="status"
+          >Conectando ao banco de dados…</span
+        ><button class="button subtle" id="backupButton">
+          <span data-icon="download"></span> Backup
+        </button>
+      </header>
+      <main id="overview">
+        <section class="page-heading">
+          <div>
+            <p class="eyebrow">CADA REAL NO SEU LUGAR</p>
+            <h1>Suas finanças, sem complicar<span>.</span></h1>
+            <p>Registre, acompanhe e siga em frente.</p>
+          </div>
+          <button class="button primary" id="addButton">
+            <span data-icon="plus"></span> Novo lançamento
+          </button>
+        </section>
+        <div class="period-bar">
+          <div class="month-control">
+            <button
+              class="icon-button"
+              id="previousMonth"
+              aria-label="Mês anterior"
+            >
+              <span data-icon="left"></span>
+            </button>
+            <h2 id="monthLabel"></h2>
+            <button class="icon-button" id="nextMonth" aria-label="Próximo mês">
+              <span data-icon="right"></span>
+            </button>
+          </div>
+          <button class="text-button" id="todayButton">Ir para este mês</button>
+        </div>
+        <section class="summary" aria-label="Resumo do mês">
+          <article class="summary-card expense-card">
+            <div class="card-label">
+              Despesas do mês<span data-icon="out"></span>
+            </div>
+            <strong id="totalExpense">R$ 0,00</strong>
+            <p id="expenseNote">Tudo começa com o primeiro registro.</p>
+            <div class="card-decoration" aria-hidden="true"></div>
+          </article>
+          <article class="summary-card">
+            <div class="card-label">
+              Entradas<span class="income-icon" data-icon="in"></span>
+            </div>
+            <strong id="totalIncome">R$ 0,00</strong>
+            <p>O que entrou neste mês</p>
+          </article>
+          <article class="summary-card">
+            <div class="card-label">
+              Saldo do mês<span data-icon="wallet"></span>
+            </div>
+            <strong id="balanceDisplay">R$ 0,00</strong>
+            <p>Entradas menos todas as despesas</p>
+          </article>
+        </section>
+        <div class="content-grid">
+          <section class="panel transactions-panel" id="transactions">
+            <div class="panel-heading">
+              <div>
+                <h2>Lançamentos</h2>
+                <p id="transactionCount">Seu mês, registro por registro.</p>
+              </div>
+              <span class="small-badge" id="pendingCount">Tudo em dia</span>
+            </div>
+            <div class="list-tools">
+              <div
+                class="filter-tabs"
+                role="group"
+                aria-label="Filtrar lançamentos"
+              >
+                <button
+                  class="filter active"
+                  data-filter="all"
+                  aria-pressed="true"
+                >
+                  Todos</button
+                ><button
+                  class="filter"
+                  data-filter="expense"
+                  aria-pressed="false"
+                >
+                  Despesas</button
+                ><button
+                  class="filter"
+                  data-filter="income"
+                  aria-pressed="false"
+                >
+                  Entradas
+                </button>
+              </div>
+              <label class="search"
+                ><span data-icon="search"></span
+                ><input
+                  id="searchInput"
+                  type="search"
+                  placeholder="Buscar lançamento"
+                  aria-label="Buscar lançamento"
+              /></label>
+            </div>
+            <div class="list-heading" aria-hidden="true">
+              <span>DESCRIÇÃO</span><span>VALOR</span>
+            </div>
+            <ul id="transactionList" class="transaction-list"></ul>
+            <div id="emptyState" class="empty-state">
+              <span class="empty-symbol" data-icon="receipt"></span>
+              <h3>Um começo mais leve.</h3>
+              <p>
+                Adicione sua primeira despesa.<br />O resto fica mais fácil de
+                acompanhar.
+              </p>
+              <button class="text-button" id="emptyAdd">
+                + Registrar um lançamento
+              </button>
+            </div>
+          </section>
+          <aside class="right-column">
+            <section class="panel categories-panel">
+              <div class="panel-heading">
+                <div>
+                  <h2>Para onde foi?</h2>
+                  <p>Suas despesas por categoria</p>
+                </div>
+                <span data-icon="chart"></span>
+              </div>
+              <div id="categoryChart"></div>
+              <div class="category-total">
+                <span>Total do mês</span
+                ><strong id="categoryTotal">R$ 0,00</strong>
+              </div>
+            </section>
+            <section class="small-note">
+              <span data-icon="leaf"></span>
+              <div>
+                <h3>Pequenos registros. Mais tranquilidade.</h3>
+                <p>
+                  Não precisa organizar tudo de uma vez. Comece pela próxima
+                  despesa.
+                </p>
+              </div>
+            </section>
+          </aside>
+        </div>
+        <footer class="page-footer">
+          <span>Mais clareza. Menos preocupação.</span
+          ><span
+            >Feito para o seu dia a dia <span class="footer-dot">●</span></span
+          >
+        </footer>
+      </main>
+      <main id="installmentsPage" hidden>
+        <section class="page-heading">
+          <div>
+            <p class="eyebrow">UM PASSO DE CADA VEZ</p>
+            <h1>Suas parcelas, no seu ritmo<span>.</span></h1>
+            <p>
+              Acompanhe o que já foi pago e o que ainda falta, em todos os
+              meses.
+            </p>
+          </div>
+          <button class="button primary" id="addInstallmentButton">
+            <span data-icon="plus"></span> Novo parcelamento
+          </button>
+        </section>
+        <section
+          class="summary installments-summary"
+          aria-label="Resumo dos parcelamentos"
+        >
+          <article class="summary-card expense-card">
+            <div class="card-label">
+              Falta pagar<span data-icon="wallet"></span>
+            </div>
+            <strong id="installmentsRemaining">R$ 0,00</strong>
+            <p id="installmentsRemainingCount">0 parcelas em aberto</p>
+          </article>
+          <article class="summary-card">
+            <div class="card-label">
+              Já foi pago<span data-icon="check"></span>
+            </div>
+            <strong id="installmentsPaid">R$ 0,00</strong>
+            <p id="installmentsPaidCount">0 parcelas pagas</p>
+          </article>
+          <article class="summary-card">
+            <div class="card-label">
+              Valor total<span data-icon="receipt"></span>
+            </div>
+            <strong id="installmentsTotal">R$ 0,00</strong>
+            <p id="installmentsPlanCount">0 parcelamentos</p>
+          </article>
+        </section>
+        <div id="installmentPlans" class="installment-plans"></div>
+        <section class="panel empty-state" id="installmentsEmpty">
+          <span class="empty-symbol" data-icon="receipt"></span>
+          <h3>Uma visão completa das suas parcelas.</h3>
+          <p>
+            Registre uma compra parcelada para acompanhar os pagamentos por
+            aqui.
+          </p>
+          <button class="text-button" id="emptyInstallmentAdd">
+            + Adicionar um parcelamento
+          </button>
+        </section>
+        <footer class="page-footer">
+          <span>Marque uma parcela como paga somente após o pagamento.</span
+          ><span>Um mês de cada vez.</span>
+        </footer>
+      </main>
+    </div>
+    <dialog id="transactionDialog">
+      <form id="transactionForm">
+        <div class="dialog-heading">
+          <div>
+            <p class="eyebrow">UM REGISTRO DE CADA VEZ</p>
+            <h2 id="dialogTitle">Novo lançamento</h2>
+          </div>
+          <button
+            class="icon-button"
+            type="button"
+            data-close="transactionDialog"
+            aria-label="Fechar"
+          >
+            <span data-icon="close"></span>
+          </button>
+        </div>
+        <div class="form-type" role="group" aria-label="Tipo de lançamento">
+          <button
+            type="button"
+            data-type="expense"
+            class="selected"
+            aria-pressed="true"
+          >
+            Despesa</button
+          ><button type="button" data-type="income" aria-pressed="false">
+            Entrada
+          </button>
+        </div>
+        <label id="scheduleField"
+          >Como será essa despesa?
+          <select id="schedule">
+            <option value="once">Uma vez só</option>
+            <option value="fixed">Fixa — repetir todo mês</option>
+            <option value="installments">Parcelada</option>
+          </select>
+        </label>
+        <label id="installmentsField" hidden
+          >Quantidade de parcelas<input
+            id="installments"
+            type="number"
+            min="2"
+            max="360"
+            step="1"
+            value="2"
+            inputmode="numeric"
+        /></label>
+        <p class="schedule-note" id="scheduleNote" hidden></p>
+        <label
+          >Descrição<input
+            id="description"
+            required
+            maxlength="120"
+            placeholder="Ex.: Mercado da semana"
+            autocomplete="off"
+        /></label>
+        <div class="form-row">
+          <label
+            ><span id="amountLabel">Valor (R$)</span
+            ><input
+              id="amount"
+              type="number"
+              min="0.01"
+              max="999999999"
+              step="0.01"
+              required
+              placeholder="0,00"
+              inputmode="decimal" /></label
+          ><label
+            ><span id="dateLabel">Data</span
+            ><input id="date" type="date" required
+          /></label>
+        </div>
+        <label
+          >Categoria<input
+            id="category"
+            list="categoryOptions"
+            maxlength="60"
+            placeholder="Ex.: Alimentação"
+            autocomplete="off" /><datalist id="categoryOptions"></datalist
+          ><span class="field-hint" id="categoryHint"></span></label
+        ><label class="checkbox-label" id="paidField"
+          ><input id="paid" type="checkbox" checked />
+          <span id="paidLabel">Já foi paga</span></label
+        >
+        <p class="form-error" id="formError" role="alert"></p>
+        <div class="dialog-actions">
+          <button
+            class="button subtle"
+            type="button"
+            data-close="transactionDialog"
+          >
+            Cancelar</button
+          ><button class="button primary" type="submit">
+            Salvar lançamento<span data-icon="right"></span>
+          </button>
+        </div>
+      </form>
+    </dialog>
+    <dialog id="backupDialog">
+      <div class="dialog-heading">
+        <div>
+          <p class="eyebrow">SEUS REGISTROS COM VOCÊ</p>
+          <h2>Backup dos dados</h2>
+        </div>
+        <button
+          class="icon-button"
+          data-close="backupDialog"
+          aria-label="Fechar"
+        >
+          <span data-icon="close"></span>
+        </button>
+      </div>
+      <p class="backup-copy">
+        Os registros ficam no banco de dados do servidor, com backups
+        automáticos. Você também pode baixar uma cópia para guardar em outro
+        lugar.
+      </p>
+      <button id="exportButton" class="button primary wide">
+        <span data-icon="download"></span> Baixar backup</button
+      ><button id="importButton" class="button subtle wide">
+        <span data-icon="upload"></span> Importar backup
+      </button>
+      <p class="backup-hint">
+        A importação adiciona os registros novos e preserva os atuais.
+      </p>
+      <input
+        type="file"
+        id="importFile"
+        accept=".json,application/json"
+        hidden
+      />
+    </dialog>
+    <dialog id="deleteDialog">
+      <div class="dialog-heading">
+        <h2>Excluir lançamento?</h2>
+        <button
+          class="icon-button"
+          data-close="deleteDialog"
+          aria-label="Fechar"
+        >
+          <span data-icon="close"></span>
+        </button>
+      </div>
+      <p class="backup-copy" id="deleteDescription"></p>
+      <p class="backup-hint" id="deleteHint">
+        Somente este lançamento será excluído.
+      </p>
+      <div class="dialog-actions">
+        <button class="button subtle" data-close="deleteDialog">Cancelar</button
+        ><button class="button primary" id="confirmDelete">Excluir</button>
+      </div>
+    </dialog>
+    <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+  </body>
+</html>

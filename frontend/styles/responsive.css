@@ -1,0 +1,450 @@
+@media (min-width: 1500px) {
+  main {
+    padding-top: 58px;
+  }
+  .summary {
+    margin-bottom: 34px;
+  }
+  .summary-card {
+    padding: 29px;
+  }
+  .content-grid {
+    gap: 28px;
+  }
+}
+@media (max-width: 1200px) {
+  .sidebar {
+    width: 200px;
+    padding: 30px 16px;
+  }
+  .workspace {
+    margin-left: 200px;
+  }
+  .topbar {
+    padding: 0 30px;
+  }
+  main {
+    padding: 35px 30px;
+  }
+  .page-heading {
+    align-items: flex-start;
+  }
+  h1 {
+    font-size: 25px;
+  }
+  .page-heading .button {
+    margin-top: 26px;
+    white-space: nowrap;
+  }
+  .content-grid {
+    grid-template-columns: minmax(0, 1.6fr) minmax(240px, 1fr);
+    gap: 18px;
+  }
+  .list-tools {
+    flex-wrap: wrap;
+  }
+  .search {
+    width: 100%;
+  }
+  .summary-card {
+    padding: 22px 20px;
+  }
+  .summary-card strong {
+    font-size: 27px;
+  }
+  .transaction-item {
+    padding: 17px;
+  }
+  .panel-heading {
+    padding: 22px 20px;
+  }
+  .toast {
+    left: calc(50% + 100px);
+  }
+}
+@media (max-width: 950px) {
+  .sidebar {
+    width: 78px;
+    padding: 28px 18px;
+  }
+  .brand {
+    font-size: 0;
+  }
+  .brand-symbol {
+    font-size: 28px;
+    margin: 0;
+  }
+  .brand-dot,
+  .nav-label,
+  .sidebar-footer {
+    display: none;
+  }
+  .sidebar-body {
+    margin-top: 45px;
+  }
+  .nav-item {
+    font-size: 0;
+    padding: 12px;
+    gap: 0;
+  }
+  .workspace {
+    margin-left: 78px;
+  }
+  .topbar {
+    height: 70px;
+  }
+  .content-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .right-column {
+    grid-template-columns: 1.1fr 1fr;
+    align-items: start;
+  }
+  .list-tools {
+    flex-wrap: nowrap;
+  }
+  .search {
+    width: 170px;
+  }
+  .summary {
+    gap: 12px;
+  }
+  .summary-card strong {
+    font-size: 25px;
+  }
+  .toast {
+    left: calc(50% + 39px);
+  }
+}
+@media (max-width: 650px) {
+  .sidebar {
+    position: relative;
+    width: auto;
+    height: 73px;
+    padding: 18px 22px;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    border-right: 0;
+    border-bottom: 1px solid #e6e7de;
+  }
+  .brand {
+    font-size: 21px;
+  }
+  .brand-symbol {
+    margin-right: 9px;
+    width: 32px;
+    height: 32px;
+    font-size: 25px;
+    line-height: 28px;
+    border-radius: 10px;
+  }
+  .brand-dot {
+    display: inline;
+  }
+  .sidebar-body {
+    margin: 0;
+    display: flex;
+    gap: 8px;
+  }
+  .nav-item {
+    margin: 0;
+    padding: 10px;
+    border-radius: 7px;
+  }
+  .nav-item svg {
+    width: 18px;
+    height: 18px;
+  }
+  .workspace {
+    margin: 0;
+  }
+  .topbar {
+    height: 52px;
+    padding: 0 22px;
+    font-size: 10px;
+  }
+  .topbar > span {
+    max-width: 220px;
+  }
+  .topbar .button {
+    font-size: 11px;
+    padding: 5px;
+    gap: 5px;
+  }
+  main {
+    padding: 30px 20px 15px;
+  }
+  .page-heading {
+    display: block;
+  }
+  .eyebrow {
+    font-size: 9px;
+    letter-spacing: 1.5px;
+  }
+  h1 {
+    font-size: 28px;
+    max-width: 340px;
+    line-height: 1.35;
+  }
+  .page-heading p:last-child {
+    font-size: 12px;
+  }
+  .page-heading .button {
+    width: 100%;
+    margin-top: 23px;
+    min-height: 46px;
+  }
+  .period-bar {
+    margin-top: 26px;
+    margin-bottom: 17px;
+  }
+  .month-control {
+    gap: 7px;
+  }
+  .month-control h2 {
+    font-size: 13px;
+    min-width: 125px;
+  }
+  .period-bar > .text-button {
+    font-size: 10px;
+    padding: 5px;
+  }
+  .summary {
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 22px;
+  }
+  .expense-card {
+    grid-column: 1/-1;
+  }
+  .summary-card {
+    padding: 20px;
+  }
+  .card-label {
+    font-size: 11px;
+    margin-bottom: 14px;
+  }
+  .summary-card strong {
+    font-size: 24px;
+  }
+  .expense-card strong {
+    font-size: 34px;
+  }
+  .summary-card p {
+    font-size: 10px;
+    margin-top: 9px;
+  }
+  .summary-card .card-label svg {
+    width: 17px;
+    height: 17px;
+  }
+  .content-grid {
+    gap: 20px;
+  }
+  .panel-heading {
+    padding: 23px 18px;
+  }
+  .list-tools {
+    padding: 0 18px 19px;
+    flex-wrap: wrap;
+    gap: 14px;
+  }
+  .filter-tabs {
+    width: 100%;
+  }
+  .filter {
+    flex: 1;
+    font-size: 12px;
+  }
+  .search {
+    width: 100%;
+    background: #fafaf7;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 0 10px;
+  }
+  .search input {
+    padding: 10px 0;
+  }
+  .list-heading {
+    padding: 12px 18px;
+  }
+  .list-heading span:last-child {
+    margin-right: 0;
+  }
+  .transaction-item {
+    gap: 9px;
+    padding: 16px 13px;
+    flex-wrap: wrap;
+  }
+  .category-icon {
+    width: 34px;
+    height: 34px;
+  }
+  .transaction-info {
+    flex-basis: calc(100% - 48px);
+  }
+  .transaction-amount {
+    margin-left: 43px;
+    font-size: 12px;
+  }
+  .row-actions {
+    margin-left: auto;
+  }
+  .payment-toggle {
+    margin-left: 4px;
+  }
+  .right-column {
+    grid-template-columns: 1fr;
+  }
+  .small-note {
+    padding: 22px;
+  }
+  .page-footer {
+    margin-top: 28px;
+    gap: 20px;
+    font-size: 9px;
+  }
+  .toast {
+    left: 50%;
+    width: max-content;
+  }
+  dialog {
+    padding: 23px;
+  }
+  .dialog-actions .button {
+    font-size: 12px;
+    padding: 0 14px;
+  }
+  .form-row {
+    gap: 10px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  button {
+    transition: none;
+  }
+}
+@media (max-width: 1200px) {
+  .sidebar {
+    width: 182px;
+  }
+  .workspace {
+    margin-left: 200px;
+  }
+}
+@media (max-width: 950px) {
+  .sidebar {
+    width: 68px;
+    left: 10px;
+    top: 14px;
+    bottom: 14px;
+    padding: 24px 15px;
+    border-radius: 19px;
+  }
+  .workspace {
+    margin-left: 78px;
+  }
+  .nav-item {
+    padding: 9px;
+  }
+}
+@media (max-width: 650px) {
+  .sidebar {
+    position: relative;
+    inset: auto;
+    margin: 12px 12px 0;
+    width: calc(100% - 24px);
+    height: 65px;
+    padding: 15px 17px;
+    border-radius: 19px;
+  }
+  .workspace {
+    margin: 0;
+  }
+  .topbar {
+    background: none;
+  }
+  .summary-card {
+    border-radius: 17px;
+  }
+  .search {
+    background: #ffffff69;
+    border-color: #fff;
+  }
+  .page-footer {
+    gap: 12px;
+  }
+}
+@media (max-width: 650px) {
+  .row-actions .icon-button,
+  .payment-toggle {
+    min-width: 40px;
+    min-height: 40px;
+  }
+  .small-note {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+}
+@supports not (backdrop-filter: blur(1px)) {
+  .panel,
+  .summary-card,
+  .sidebar {
+    background: #f8fafbee;
+  }
+  .expense-card {
+    background: #4b8392;
+  }
+  dialog {
+    background: #f5f8f8;
+  }
+}
+@media (max-width: 1000px) {
+  .installment-plans {
+    grid-template-columns: 1fr;
+  }
+  .installments-summary .summary-card strong {
+    font-size: 24px;
+  }
+}
+@media (max-width: 650px) {
+  .installment-plan summary {
+    padding: 22px 18px;
+  }
+  .plan-amounts strong {
+    font-size: 17px;
+  }
+  .installment-row {
+    padding: 13px 12px;
+    gap: 7px;
+  }
+  .installment-row .payment-toggle {
+    margin: 0;
+  }
+  .installment-row > strong {
+    font-size: 12px;
+  }
+  .installment-row-info > span {
+    font-size: 10px;
+  }
+  .sidebar .brand {
+    font-size: 18px;
+  }
+  .sidebar .brand-symbol {
+    margin-right: 7px;
+  }
+  .sidebar-body {
+    gap: 3px;
+  }
+  .nav-item {
+    padding: 9px;
+  }
+  .installments-summary {
+    margin-top: 25px;
+  }
+}

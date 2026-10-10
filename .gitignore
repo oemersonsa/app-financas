@@ -1,0 +1,9 @@
+# Dados financeiros e cópias de segurança ficam fora do Git.
+data/
+*.sqlite3
+*.sqlite3-wal
+*.sqlite3-shm
+__pycache__/
+.env
+.env.*
+node_modules/

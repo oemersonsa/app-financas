@@ -1,0 +1,222 @@
+"""Integração real com SQLite e Chromium. Requer Playwright Python e Chromium."""
+import json
+from pathlib import Path
+import tempfile
+import subprocess
+from urllib.request import urlopen
+import unittest
+from playwright.sync_api import sync_playwright, expect
+
+
+
+class BrowserTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.playwright = sync_playwright().start()
+        cls.browser = cls.playwright.chromium.launch(executable_path='/usr/bin/chromium', args=['--no-sandbox'])
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.browser.close()
+        cls.playwright.stop()
+
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory()
+        self.process = subprocess.Popen(['node','server.js','--port','0','--data-dir',self.temp.name], cwd=Path(__file__).resolve().parents[1], stdout=subprocess.PIPE, text=True)
+        info = json.loads(self.process.stdout.readline())
+        self.url = f'http://127.0.0.1:{info["port"]}'
+        class Store:
+            def read(inner):
+                with urlopen(self.url + '/api/state') as response:
+                    return json.load(response)
+        self.store = Store()
+        self.context = self.browser.new_context(timezone_id='America/Sao_Paulo', viewport={'width':1440,'height':1000})
+        self.page = self.context.new_page()
+        self.errors = []
+        self.page.on('pageerror', lambda error: self.errors.append(str(error)))
+        self.page.goto(self.url)
+        self.ready(self.page)
+
+    def ready(self, page):
+        expect(page.locator('#storageStatus')).to_contain_text('servidor · backup')
+
+    def tearDown(self):
+        self.assertEqual(self.errors, [])
+        self.context.close()
+        self.process.terminate()
+        self.process.wait(timeout=10)
+        self.process.stdout.close()
+        self.temp.cleanup()
+
+    def add(self, name, amount, schedule='once', kind='expense', date='2026-01-31', count=3, paid=False):
+        self.page.locator('#addButton').click()
+        self.page.locator(f'[data-type={kind}]').click()
+        if kind == 'expense':
+            self.page.locator('#schedule').select_option(schedule)
+        if schedule == 'installments':
+            self.page.locator('#installments').fill(str(count))
+        self.page.locator('#description').fill(name)
+        self.page.locator('#amount').fill(amount)
+        self.page.locator('#date').fill(date)
+        self.page.locator('#category').fill('Moradia' if schedule=='fixed' else 'Dívidas de cartão')
+        if kind=='expense':
+            self.page.locator('#paid').set_checked(paid)
+        self.page.locator('button[type=submit]').click()
+        expect(self.page.locator('#transactionDialog')).not_to_be_visible()
+        self.ready(self.page)
+
+    def test_installments_counts_amounts_and_month_end(self):
+        self.add('Notebook', '100.00', schedule='installments', paid=True)
+        expect(self.page.locator('#installmentsPage')).to_be_visible()
+        expect(self.page.locator('#installmentsPaid')).to_contain_text('33,34')
+        expect(self.page.locator('#installmentsRemaining')).to_contain_text('66,66')
+        expect(self.page.locator('#installmentsPaidCount')).to_contain_text('1 parcela paga')
+        rows=self.store.read()['data']['transactions']
+        self.assertEqual([r['rawDate'] for r in rows],['2026-01-31','2026-02-28','2026-03-31'])
+        self.assertEqual([r['amount'] for r in rows],[33.34,33.33,33.33])
+        self.page.locator('.installment-plan summary').click()
+        self.page.get_by_role('button',name='Marcar como paga: parcela 2 de Notebook',exact=True).click()
+        expect(self.page.locator('#installmentsPaid')).to_contain_text('66,67')
+        expect(self.page.locator('#installmentsRemaining')).to_contain_text('33,33')
+        expect(self.page.locator('.installment-plan')).to_have_attribute('open','')
+        self.page.reload()
+        self.ready(self.page)
+        expect(self.page.locator('#installmentsRemaining')).to_contain_text('33,33')
+        self.page.locator('.installment-plan summary').click()
+        self.page.get_by_role('button',name='Marcar como pendente: parcela 2 de Notebook',exact=True).click()
+        expect(self.page.locator('#installmentsRemaining')).to_contain_text('66,66')
+        self.page.locator('a[href="#overview"]').click()
+        expect(self.page.locator('#totalExpense')).to_contain_text('0,00') # recarregar abre mês atual
+        self.assertEqual(len(self.store.read()['data']['transactions']),3)
+
+    def test_fixed_repeats_without_duplicates_and_preserves_day(self):
+        self.add('Aluguel', '900', schedule='fixed', paid=True)
+        self.page.locator('#nextMonth').click()
+        expect(self.page.locator('#totalExpense')).to_contain_text('900,00')
+        rows=self.store.read()['data']['transactions']
+        self.assertEqual(rows[1]['rawDate'],'2026-02-28')
+        self.assertFalse(rows[1]['paid'])
+        self.page.locator('#nextMonth').click()
+        expect(self.page.locator('#monthLabel')).to_contain_text('março',ignore_case=True)
+        self.page.locator('#previousMonth').click()
+        expect(self.page.locator('.transaction-item')).to_have_count(1)
+        self.assertEqual(len(self.store.read()['data']['transactions']),3)
+        self.page.get_by_role('button',name='Excluir Aluguel').click()
+        self.page.locator('#confirmDelete').click()
+        expect(self.page.locator('.transaction-item')).to_have_count(0)
+        self.page.locator('#previousMonth').click()
+        self.page.get_by_role('button',name='Excluir Aluguel').click()
+        self.page.locator('#confirmDelete').click()
+        expect(self.page.locator('.transaction-item')).to_have_count(0)
+        self.page.locator('#nextMonth').click()
+        expect(self.page.locator('.transaction-item')).to_have_count(0)
+        self.page.locator('#nextMonth').click()
+        expect(self.page.locator('.transaction-item')).to_have_count(1)
+        self.page.locator('#nextMonth').click()
+        expect(self.page.locator('.transaction-item')).to_have_count(1)
+        april=[r for r in self.store.read()['data']['transactions'] if r['rawDate']=='2026-04-30']
+        self.assertEqual(len(april),1)
+
+    def test_database_survives_new_browser_and_cleared_storage(self):
+        self.add('Salário', '1000', kind='income')
+        self.add('Mercado', '250', paid=True)
+        expect(self.page.locator('#balanceDisplay')).to_contain_text('750,00')
+        self.page.evaluate('localStorage.clear()')
+        self.page.reload()
+        self.ready(self.page)
+        fresh=self.browser.new_context()
+        try:
+            page=fresh.new_page()
+            page.goto(self.url)
+            self.ready(page)
+            self.assertEqual(page.evaluate("async () => (await (await fetch('/api/state')).json()).data.transactions.length"),2)
+            self.assertEqual(page.evaluate('localStorage.getItem("finances_transactions_v3")'),None)
+        finally:
+            fresh.close()
+
+    def test_edit_one_installment_backup_and_delete_series(self):
+        self.add('Compra', '120', schedule='installments')
+        self.page.locator('.installment-plan summary').click()
+        self.page.get_by_role('button',name='Editar parcela 2 de Compra',exact=True).click()
+        expect(self.page.locator('#schedule')).to_be_disabled()
+        self.page.locator('#amount').fill('45')
+        self.page.locator('button[type=submit]').click()
+        expect(self.page.locator('#installmentsTotal')).to_contain_text('125,00')
+        self.page.locator('#backupButton').click()
+        with self.page.expect_download() as info:
+            self.page.locator('#exportButton').click()
+        backup=Path(info.value.path()).read_bytes()
+        self.assertEqual(len(json.loads(backup)['transactions']),3)
+        self.page.locator('#importFile').set_input_files({'name':'backup.json','mimeType':'application/json','buffer':backup})
+        expect(self.page.locator('#backupDialog')).not_to_be_visible()
+        self.assertEqual(len(self.store.read()['data']['transactions']),3)
+        self.page.get_by_role('button',name='Excluir parcelamento',exact=True).click()
+        expect(self.page.locator('#deleteHint')).to_contain_text('Todas as parcelas')
+        self.page.get_by_role('button',name='Cancelar',exact=True).click()
+        self.assertEqual(len(self.store.read()['data']['transactions']),3)
+        self.page.get_by_role('button',name='Excluir parcelamento',exact=True).click()
+        self.page.locator('#confirmDelete').click()
+        expect(self.page.locator('#installmentsEmpty')).to_be_visible()
+        self.assertEqual(self.store.read()['data']['transactions'],[])
+
+    def test_failed_network_does_not_confirm_save(self):
+        self.page.route('**/api/state',lambda route: route.abort() if route.request.method=='PUT' else route.continue_())
+        self.page.locator('#addButton').click()
+        self.page.locator('#description').fill('Não salva')
+        self.page.locator('#amount').fill('50')
+        self.page.locator('button[type=submit]').click()
+        expect(self.page.locator('#formError')).to_contain_text('não foi salvo')
+        expect(self.page.locator('#transactionDialog')).to_be_visible()
+        self.assertEqual(self.store.read()['data']['transactions'],[])
+
+    def test_legacy_migration_and_installment_compatibility(self):
+        legacy=[{'id':1,'description':'Compra antiga','amount':20,'type':'expense','category':'Lazer','rawDate':'2026-01-31','totalInstallments':2,'installmentNumber':1,'parentId':None}, {'id':2,'description':'Compra antiga','amount':20,'type':'expense','category':'Lazer','rawDate':'2027-02-28','totalInstallments':2,'installmentNumber':2,'parentId':1}]
+        self.page.evaluate('(rows)=>localStorage.setItem("finances_transactions_v3",JSON.stringify(rows))',legacy)
+        self.page.reload()
+        self.ready(self.page)
+        self.page.locator('a[href="#parcelas"]').click()
+        expect(self.page.locator('.installment-plan')).to_have_count(1)
+        expect(self.page.locator('#installmentsPaid')).to_contain_text('20,00')
+        expect(self.page.locator('#installmentsRemaining')).to_contain_text('20,00')
+        self.assertEqual(len(self.store.read()['data']['transactions']),2)
+        self.page.reload()
+        self.ready(self.page)
+        self.assertEqual(len(self.store.read()['data']['transactions']),2)
+
+    def test_stale_browser_cannot_overwrite_another_device(self):
+        fresh=self.browser.new_context()
+        try:
+            other=fresh.new_page()
+            other.goto(self.url)
+            self.ready(other)
+            self.add('Primeiro dispositivo','10')
+            other.locator('#addButton').click()
+            other.locator('#description').fill('Registro concorrente')
+            other.locator('#amount').fill('20')
+            other.locator('button[type=submit]').click()
+            expect(other.locator('#formError')).to_contain_text('não foi salvo')
+            self.assertEqual(len(self.store.read()['data']['transactions']),1)
+            other.locator('button[type=submit]').click()
+            expect(other.locator('#transactionDialog')).not_to_be_visible()
+            self.assertEqual(len(self.store.read()['data']['transactions']),2)
+        finally:
+            fresh.close()
+
+    def test_categories_mobile_layout_and_escaping(self):
+        expect(self.page.locator('.sidebar')).to_have_css('position', 'fixed')
+        options=self.page.locator('#categoryOptions option').evaluate_all('(els)=>els.map(el=>el.value)')
+        for name in ['Moradia','Alimentação','Assinaturas','Lazer','Pensão','Dívidas de cartão','Empréstimos']:
+            self.assertIn(name,options)
+        self.add('<img src=x onerror="window.injected=true">','80',schedule='installments')
+        self.assertFalse(self.page.evaluate('!!window.injected'))
+        expect(self.page.locator('#installmentPlans img')).to_have_count(0)
+        for width in [320,390,768,1440]:
+            self.page.set_viewport_size({'width':width,'height':900})
+            self.assertTrue(self.page.evaluate('document.documentElement.scrollWidth <= innerWidth'),width)
+            self.page.locator('a[href="#overview"]').click()
+            self.assertTrue(self.page.evaluate('document.documentElement.scrollWidth <= innerWidth'),width)
+            self.page.locator('a[href="#parcelas"]').click()
+
+
+if __name__ == '__main__':
+    unittest.main()

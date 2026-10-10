@@ -1,0 +1,228 @@
+button,
+input {
+  font: inherit;
+}
+button,
+a,
+input {
+  -webkit-tap-highlight-color: transparent;
+}
+button {
+  cursor: pointer;
+  transition:
+    background 0.18s,
+    transform 0.18s;
+}
+button:active {
+  transform: translateY(1px);
+}
+button:focus-visible,
+a:focus-visible {
+  outline: 3px solid #d98a77;
+  outline-offset: 4px;
+}
+.button svg {
+  width: 17px;
+  height: 17px;
+}
+.icon-button svg {
+  width: 17px;
+  height: 17px;
+}
+.text-button {
+  border: 0;
+  background: none;
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 9px;
+}
+.text-button:hover {
+  color: var(--accent-dark);
+}
+.panel {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+.panel-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 25px 25px 22px;
+  gap: 12px;
+}
+.panel-heading h2 {
+  font-family: var(--font);
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: -0.4px;
+}
+.panel-heading p {
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 5px;
+}
+.panel-heading > span svg {
+  color: #a4aa98;
+}
+.small-badge.pending {
+  background: #fff2e6;
+  color: #ab7849;
+}
+.search {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  width: 165px;
+  min-width: 0;
+  color: #a0a398;
+}
+.search svg {
+  width: 15px;
+  height: 15px;
+}
+.search input {
+  min-width: 0;
+  width: 100%;
+  border: 0;
+  background: none;
+  padding: 8px 0;
+  outline-offset: 3px;
+  font-size: 11px;
+}
+.search input::placeholder {
+  color: #a1a498;
+}
+.category-icon {
+  height: 39px;
+  width: 39px;
+  border-radius: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.category-icon svg {
+  width: 19px;
+  height: 19px;
+}
+.row-actions {
+  display: flex;
+  gap: 4px;
+  margin-left: 4px;
+}
+.row-actions .icon-button {
+  border: 0;
+  min-width: 28px;
+  min-height: 32px;
+  padding: 6px;
+}
+.row-actions .icon-button svg {
+  width: 14px;
+  height: 14px;
+}
+.payment-toggle {
+  border: 0;
+  background: transparent;
+  color: #a4a899;
+  padding: 5px;
+  display: flex;
+  align-items: center;
+  min-height: 32px;
+}
+.payment-toggle.is-paid {
+  color: var(--green);
+}
+.payment-toggle svg {
+  width: 16px;
+  height: 16px;
+}
+.categories-panel .panel-heading {
+  padding-bottom: 28px;
+}
+.wide {
+  width: 100%;
+  margin-bottom: 10px;
+}
+.button {
+  border: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  min-height: 44px;
+  padding: 0 18px;
+  font-weight: 600;
+  font-size: 13px;
+  border-radius: 12px;
+}
+.primary {
+  color: #fff;
+  background: linear-gradient(160deg, #488c98, #357684);
+  border: 1px solid #ffffff44;
+  box-shadow:
+    inset 0 1px 0 #ffffff44,
+    0 5px 13px #396d7820;
+}
+.primary:hover {
+  background: linear-gradient(160deg, #357987, #286471);
+}
+.subtle {
+  color: #62675b;
+  background: #ffffff6b;
+  border: 1px solid #fff9;
+}
+.subtle:hover {
+  background: #ffffffbb;
+}
+.icon-button {
+  padding: 7px;
+  border: 1px solid var(--line);
+  color: #777b70;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 34px;
+  min-height: 34px;
+  border-color: #fff;
+  background: #ffffff50;
+  border-radius: 10px;
+}
+.icon-button:hover {
+  background: #ffffffc0;
+}
+.small-badge {
+  font-size: 10px;
+  white-space: nowrap;
+  padding: 6px 9px;
+  background: #e2eee6b0;
+  color: #517664;
+  border: 1px solid #fffc;
+  border-radius: 8px;
+}
+.toast {
+  position: fixed;
+  bottom: 24px;
+  left: calc(50% + 118px);
+  transform: translateX(-50%);
+  padding: 14px 22px;
+  color: #fff;
+  font-size: 12px;
+  box-shadow: 0 8px 30px #0002;
+  z-index: 10;
+  max-width: calc(100% - 32px);
+  text-align: center;
+  background: #355862ed;
+  border: 1px solid #ffffff44;
+  backdrop-filter: blur(18px);
+  border-radius: 14px;
+}
+.payment-toggle,
+.row-actions .icon-button {
+  min-width: 34px;
+  min-height: 36px;
+}
+.storage-error {
+  color: #a24f47 !important;
+}
