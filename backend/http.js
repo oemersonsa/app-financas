@@ -9,7 +9,7 @@ import { sameOrigin, readJson } from './requests.js';
 import { validDocument } from './validation.js';
 
 const root = fileURLToPath(new URL('../frontend/', import.meta.url));
-const loginAssets = new Set(['/login.html', '/styles/base.css', '/styles/login.css', '/js/login.js']);
+const loginAssets = new Set(['/login.html', '/styles/base.css', '/styles/login.css', '/js/login.js', '/js/theme.js', '/styles/theme.css']);
 export async function createApplication(store, { password, username = 'usuario', secureCookies = process.env.NODE_ENV === 'production' } = {}) {
   const files = await publicFiles(root);
   const sessions = password ? await createSessions(store.client, credentialVersion(username, password)) : null;

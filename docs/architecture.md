@@ -47,3 +47,7 @@ Há um único conjunto de finanças por implantação, protegido por usuário, s
 ## Superfícies de vidro
 
 `styles/glass.css` acrescenta transparência, desfoque, saturação e reflexos às superfícies. Controles pequenos recebem reflexos de posição do mouse por `vue/glass.js`, limitados a uma atualização por frame. Os eventos e frames são removidos ao desmontar a interface. O movimento respeita `prefers-reduced-motion`; transparência reduzida e cores forçadas têm alternativas de CSS. Navegadores sem desfoque mantêm superfícies mais opacas. O efeito aproxima o visual do vidro sem simular refração óptica do fundo.
+
+## Tema
+
+`js/theme.js` é carregado antes do bundle para aplicar o tema sem clarão inicial e compartilhar a preferência entre painel e login. Somente a chave `meu-bolso-theme` é salva no navegador; dados financeiros continuam no banco. O modo Sistema acompanha `prefers-color-scheme`, e eventos de armazenamento atualizam as outras abas. `styles/theme.css` adapta a paleta e o `color-scheme` também cobre controles nativos. Esses dois arquivos são públicos para funcionar antes da autenticação.

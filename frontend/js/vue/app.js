@@ -15,6 +15,7 @@ import {
   TransactionRow,
   CategoryChart,
   AnnualChart,
+  ThemeControl,
 } from "./components.js";
 import { money } from "../core/format.js";
 import { monthKey, localDate } from "../core/dates.js";
@@ -26,7 +27,7 @@ import {
 } from "../domain/installments.js";
 
 createApp({
-  components: { Icon, TransactionRow, CategoryChart, AnnualChart },
+  components: { Icon, TransactionRow, CategoryChart, AnnualChart, ThemeControl },
   setup() {
     useGlassReflection();
     const page = ref("overview"),
@@ -291,6 +292,7 @@ createApp({
           >{{state.status}}</span
         >
         <div class="topbar-actions">
+          <ThemeControl />
           <button
             class="icon-button mobile-backup"
             aria-label="Backup"

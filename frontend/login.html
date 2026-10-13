@@ -8,8 +8,14 @@
   <link rel="stylesheet" href="/styles/base.css" />
   <link rel="stylesheet" href="/styles/login.css" />
   <script type="module" src="/js/login.js"></script>
+  <link rel="stylesheet" href="/styles/theme.css" />
+  <script src="/js/theme.js"></script>
 </head>
 <body>
+  <label class="theme-control login-theme">
+    <span aria-hidden="true">◐</span>
+    <select id="loginTheme" aria-label="Tema"><option value="system">Sistema</option><option value="light">Claro</option><option value="dark">Escuro</option></select>
+  </label>
   <main class="login-card">
     <a href="/" class="login-brand" aria-label="Meu bolso">m<span>·</span></a>
     <p class="eyebrow">MEU BOLSO</p>

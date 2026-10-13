@@ -49,6 +49,10 @@ O Blueprint indica o plano gratuito do Render. Esse plano pode suspender o servi
 
 O painel usa Vue 3 com componentes para lançamentos, resumo, gráfico de categorias, entradas e despesas do ano e vencimentos pendentes do mês. Os valores vêm da API: nenhum registro de demonstração é inserido. No celular, o saldo aparece primeiro e a navegação fica na parte inferior. O seletor de mês, os filtros e a busca controlam os lançamentos exibidos.
 
+## Tema claro e escuro
+
+O seletor Tema no topo do painel e na tela de login oferece Sistema, Claro e Escuro. Sistema acompanha a preferência do dispositivo; uma escolha manual fica salva somente neste navegador e é sincronizada entre abas. O tema é aplicado antes de carregar a interface e adapta gráficos, formulários, diálogos e o efeito de vidro.
+
 ## Lançamentos
 
 - Despesa comum: informe descrição, valor, data, categoria e se já foi paga.
