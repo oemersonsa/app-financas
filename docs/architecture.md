@@ -38,8 +38,12 @@ Os gráficos exibem os registros existentes, sem materializar contas fixas de me
 
 ## Evolução
 
-Coloque cálculos em `domain/`, estilos da interface em `styles/vue.css` e alterações de persistência no backend. Extraia responsabilidades quando um módulo começar a misturar assuntos; arquivos perto de 100–250 linhas são uma orientação, não uma regra absoluta. `npm run check` detecta sintaxe inválida, caminhos incorretos, ciclos e dependências da camada financeira na interface.
+Coloque cálculos em `domain/`, estilos de estrutura em `styles/vue.css` e superfícies de vidro em `styles/glass.css` e alterações de persistência no backend. Extraia responsabilidades quando um módulo começar a misturar assuntos; arquivos perto de 100–250 linhas são uma orientação, não uma regra absoluta. `npm run check` detecta sintaxe inválida, caminhos incorretos, ciclos e dependências da camada financeira na interface.
 
 ## Limites
 
 Há um único conjunto de finanças por implantação, protegido por usuário, senha e sessão. A tela de login não fornece cadastro público ou recuperação de senha; as credenciais são administradas nas variáveis do Render. O cliente carrega dados ao abrir e detecta conflitos ao gravar; não há sincronização em tempo real nem contas separadas. O banco remoto permite reinícios sem perda de dados, mas a estrutura de documento único não foi projetada para um sistema de grande volume. Histórico no mesmo banco não substitui uma cópia externa.
+
+## Superfícies de vidro
+
+`styles/glass.css` acrescenta transparência, desfoque, saturação e reflexos às superfícies. Controles pequenos recebem reflexos de posição do mouse por `vue/glass.js`, limitados a uma atualização por frame. Os eventos e frames são removidos ao desmontar a interface. O movimento respeita `prefers-reduced-motion`; transparência reduzida e cores forçadas têm alternativas de CSS. Navegadores sem desfoque mantêm superfícies mais opacas. O efeito aproxima o visual do vidro sem simular refração óptica do fundo.

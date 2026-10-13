@@ -8,6 +8,7 @@ import {
   logout,
   importBackup,
 } from "./store.js";
+import { useGlassReflection } from "./glass.js";
 import { useTransactionForm } from "./form.js";
 import {
   Icon,
@@ -27,6 +28,7 @@ import {
 createApp({
   components: { Icon, TransactionRow, CategoryChart, AnnualChart },
   setup() {
+    useGlassReflection();
     const page = ref("overview"),
       filter = ref("all"),
       search = ref(""),

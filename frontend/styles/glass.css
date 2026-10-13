@@ -1,0 +1,120 @@
+/* Solid surfaces are the fallback. Blur is enabled only when supported. */
+body {
+  background:
+    radial-gradient(ellipse at 9% 5%, #b8ddd8 0, transparent 44%),
+    radial-gradient(ellipse at 90% 13%, #d1c7ed 0, transparent 43%),
+    radial-gradient(ellipse at 48% 88%, #c6e2ed 0, transparent 47%),
+    radial-gradient(ellipse at 98% 94%, #e7d9d0 0, transparent 38%), #edf3f6;
+}
+.sidebar, .mobile-nav, .month-picker { background-color: #edf4f8; }
+.sidebar {
+  background-image: linear-gradient(135deg, #ffffffb0, #e8f1f782);
+  border-right-color: #ffffffb8;
+  box-shadow: inset -1px 0 0 #ffffffa8, 8px 0 30px #52708c09;
+}
+.sidebar nav a, .sidebar nav button, .month-picker, .primary, .mobile-add {
+  --glass-x: 25%;
+  --glass-y: 0%;
+  position: relative;
+  isolation: isolate;
+  transition: box-shadow .2s ease, background-color .2s ease;
+}
+.sidebar nav a::after, .sidebar nav button::after, .month-picker::after,
+.primary::after, .mobile-add::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse at var(--glass-x) var(--glass-y), #ffffff4d, transparent 68%),
+    linear-gradient(160deg, #ffffff1f, transparent 44%, #ffffff08 75%);
+  box-shadow: inset 0 1px 0 #ffffffa1, inset 0 -1px 0 #ffffff24;
+  z-index: -1;
+}
+.sidebar nav .active {
+  color: #246879;
+  background-color: #d7eaf0;
+  background-image: linear-gradient(140deg, #ffffff69, #b6d8e133);
+  border: 1px solid #ffffffb8;
+  box-shadow: 0 5px 15px #346a7e0c, inset 0 -1px 1px #73aab52b;
+}
+.sidebar nav a, .sidebar nav button { border: 1px solid transparent; }
+.sidebar nav a:hover, .sidebar nav button:hover { background-color: #dcebf080; }
+.month-picker {
+  background-image: linear-gradient(145deg, #ffffffa6, #f3faff47);
+  border-color: #ffffffdd;
+  box-shadow: 0 5px 18px #346a7e0d, inset 0 -1px 1px #7097b22b;
+}
+.month-picker input { z-index: 1; }
+.primary, .mobile-add {
+  background-color: #327c8d;
+  background-image: linear-gradient(135deg, #5aa7b8cc, #246b7de6);
+  border-color: #e7ffff85;
+  box-shadow: 0 8px 22px #2c728b26, inset 0 1px 1px #ffffffad, inset 0 -1px 2px #125b7377;
+  text-shadow: 0 1px 2px #17576a33;
+}
+.primary:hover {
+  background-image: linear-gradient(135deg, #59a7b8, #266d80);
+  box-shadow: 0 10px 24px #2c728b36, inset 0 1px 1px #ffffffc9, inset 0 -1px 2px #125b7377;
+}
+.panel, .summary-card:not(.balance-card) {
+  background: linear-gradient(135deg, #ffffffc7, #ffffffa1);
+  border-color: #ffffffd9;
+  box-shadow: 0 9px 28px #375c7810, inset 0 1px 0 #fffffffa, inset 0 -1px 0 #ffffff59;
+}
+.balance-card {
+  background: linear-gradient(125deg, #65b1bded, #327f94ef 65%, #4c8fa4eb);
+  border-color: #d3f8ffab;
+  box-shadow: 0 12px 30px #376f8724, inset 0 1px 1px #ffffff8c, inset 0 -1px 2px #235f7f4d;
+}
+.balance-card .summary-symbol {
+  background: linear-gradient(140deg, #ffffff24, #ffffff0d);
+  border: 1px solid #ffffff33;
+  box-shadow: inset 0 1px 1px #ffffff40;
+}
+.mobile-nav {
+  background-image: linear-gradient(170deg, #ffffffb3, #edf4fac9);
+  border-top-color: #fffffff0;
+  box-shadow: 0 -5px 25px #47698410, inset 0 1px 0 #ffffff;
+}
+@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .sidebar {
+    background-color: #edf4f82e;
+    backdrop-filter: blur(28px) saturate(155%);
+    -webkit-backdrop-filter: blur(28px) saturate(155%);
+  }
+  .month-picker {
+    background-color: #edf4f833;
+    backdrop-filter: blur(18px) saturate(150%);
+    -webkit-backdrop-filter: blur(18px) saturate(150%);
+  }
+  .sidebar nav .active {
+    background-color: #cce7ec70;
+    backdrop-filter: blur(14px) saturate(145%);
+    -webkit-backdrop-filter: blur(14px) saturate(145%);
+  }
+  .panel, .summary-card:not(.balance-card) {
+    backdrop-filter: blur(22px) saturate(120%);
+    -webkit-backdrop-filter: blur(22px) saturate(120%);
+  }
+  .mobile-nav {
+    background-color: #edf4f840;
+    backdrop-filter: blur(28px) saturate(165%);
+    -webkit-backdrop-filter: blur(28px) saturate(165%);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sidebar nav a, .sidebar nav button, .month-picker, .primary, .mobile-add { transition: none; }
+}
+@media (prefers-reduced-transparency: reduce) {
+  .sidebar, .mobile-nav, .month-picker, .panel, .summary-card:not(.balance-card) {
+    background: #f5f9fc;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+  .sidebar nav .active { background: #dbeef3; backdrop-filter: none; -webkit-backdrop-filter: none; }
+}
+@media (forced-colors: active) {
+  .sidebar nav a::after, .sidebar nav button::after, .month-picker::after, .primary::after, .mobile-add::after { display: none; }
+}
