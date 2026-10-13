@@ -17,7 +17,7 @@ for (const file of files) {
   });
   if (result.status !== 0) process.exit(result.status || 1);
   const imports = [
-    ...readFileSync(file, "utf8").matchAll(/from\s+["']([^"']+)["']/g),
+    ...readFileSync(file, "utf8").matchAll(/(?:from\s+|import\s*)["']([^"']+)["']/g),
   ].filter(match => match[1].startsWith(".")).map((match) => resolve(dirname(file), match[1]));
   for (const imported of imports) {
     readFileSync(imported);

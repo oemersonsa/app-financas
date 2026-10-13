@@ -1,46 +1,44 @@
 # Organização da aplicação
 
-Frontend em JavaScript nativo com ES Modules; backend Node.js com HTTP nativo e cliente oficial libSQL. Não há bundler nem framework de interface.
+Frontend em Vue 3 com ES Modules; backend Node.js com HTTP nativo e cliente oficial libSQL. O esbuild compila Vue e os módulos em `frontend/build/app.js`, servido pela mesma aplicação. Não há dependência de CDN nem mudanças no formato do banco.
 
 ```text
 app-financas/
-├── server.js                  # Configuração, inicialização e encerramento
-├── backend/
-│   ├── assets.js              # Arquivos públicos e URLs portáveis
-│   ├── http.js                # Rotas, limites e arquivos públicos
-│   ├── auth.js                # Verificação de credenciais
-│   ├── sessions.js            # Cookies e sessões persistentes
-│   ├── login.js               # Login, logout e limite de tentativas
-│   ├── requests.js            # JSON e validação de origem
-│   ├── validation.js          # Validação do documento completo
-│   └── database.js            # Turso/SQLite, transações, revisões e histórico
+├── server.js                  # Inicialização e encerramento
+├── backend/                   # HTTP, autenticação, sessões e banco
 ├── frontend/
-│   ├── index.html             # Estrutura das telas e formulários
+│   ├── index.html             # Ponto de montagem Vue
+│   ├── login.html             # Login independente
 │   ├── js/
-│   │   ├── app.js             # Inicialização
-│   │   ├── core/              # Estado, datas e formatação
-│   │   ├── domain/            # Regras de despesas, parcelas e recorrência
-│   │   ├── services/          # API, migração e persistência
-│   │   ├── controllers/       # Eventos e ações
-│   │   └── ui/                # Renderização e navegação
-│   └── styles/                # Base, layout, componentes, telas e responsividade
-├── tests/                     # Regras, banco, API e navegador
-├── scripts/                   # Verificações de desenvolvimento
-├── data/                      # Banco local privado, ignorado pelo Git
-└── render.yaml                # Render com banco remoto Turso
+│   │   ├── vue/
+│   │   │   ├── app.js         # Navegação, painel, parcelas e diálogos
+│   │   │   ├── components.js  # Linhas de lançamento e gráficos
+│   │   │   ├── form.js        # Formulário e regras de edição
+│   │   │   └── store.js       # Estado reativo, API, migração e backup
+│   │   ├── core/             # Datas e formatação
+│   │   └── domain/           # Regras financeiras puras compartilhadas
+│   ├── build/                # Bundle gerado, ignorado pelo Git
+│   └── styles/               # Interface Vue e login
+├── tests/                    # Regras, banco, API e navegador
+├── scripts/                  # Compilação e verificações
+└── render.yaml               # Render com banco remoto Turso
 ```
 
 ## Responsabilidades
 
-As regras em `domain/` recebem dados e retornam resultados, sem acessar tela, API ou estado global. Controladores traduzem eventos em ações; serviços coordenam gravação e erros; a interface apresenta resultados. O estado está em `core/state.js`. O backend reutiliza a validação pura de lançamentos.
+As regras em `domain/` recebem dados e retornam resultados, sem acessar tela, API ou estado global. O backend reutiliza a validação pura de lançamentos. O estado reativo e a persistência ficam em `vue/store.js`; componentes renderizam valores calculados, usando interpolação Vue para escapar descrições e categorias. Somente os ícones SVG definidos pelo projeto usam HTML direto.
 
-`http.js` limita o corpo das requisições a 10 MB, valida origem e entrega exclusivamente arquivos do frontend. `auth.js` verifica credenciais; `sessions.js` protege dados e arquivos com sessões armazenadas no banco; `/health` informa somente disponibilidade. `database.js` grava o documento e histórico em uma transação, com revisão para rejeitar sobrescritas concorrentes. `server.js` conecta essas responsabilidades.
+`vue/form.js` reaproveita as regras de parcelamento e recorrência. Falhas mantêm o formulário aberto; revisões rejeitam gravações de abas antigas e atualizam os dados para permitir nova tentativa. Não há confirmação otimista de salvamento. O estado do banco permanece como `{revision, data: {version, transactions, customCategories}}`.
 
-O formato da API permanece `{revision, data: {version, transactions, customCategories}}`. A abordagem de documento único simplifica exportação e recuperação para uso pessoal. As tabelas têm prefixo `financas_`. O desenvolvimento usa SQLite pelo mesmo driver; produção exige Turso. A migração da antiga tabela `state` é permitida apenas em bancos locais.
+Os gráficos exibem os registros existentes, sem materializar contas fixas de meses não visitados. O gráfico anual apresenta entradas e despesas registradas por mês, com uma tabela acessível. Vencimentos mostram despesas pendentes do mês selecionado, incluindo atrasadas. A importação combina identificadores, sem sobrescrever registros existentes; não é uma restauração integral.
+
+`http.js` limita requisições a 10 MB, valida origem e entrega exclusivamente arquivos do frontend. Sessões ficam no banco; `/health` informa somente disponibilidade. `database.js` grava documento e histórico em uma transação, com revisão para rejeitar sobrescritas concorrentes. Desenvolvimento usa SQLite; produção exige Turso.
+
+`npm start` e `npm test` compilam o frontend automaticamente. `npm run build` pode ser executado separadamente e valida as expressões dos templates Vue antes de gerar o bundle. A entrada está em `js/app.js`; o navegador carrega somente o bundle gerado. As camadas de manipulação manual de HTML foram substituídas por componentes Vue.
 
 ## Evolução
 
-Coloque cálculos em `domain/`, estilos no arquivo da respectiva área e alterações de persistência no backend. Extraia responsabilidades quando um módulo começar a misturar assuntos; arquivos perto de 100–250 linhas são uma orientação, não uma regra absoluta. `npm run check` detecta sintaxe inválida, caminhos incorretos, ciclos e dependências da camada financeira na interface.
+Coloque cálculos em `domain/`, estilos da interface em `styles/vue.css` e alterações de persistência no backend. Extraia responsabilidades quando um módulo começar a misturar assuntos; arquivos perto de 100–250 linhas são uma orientação, não uma regra absoluta. `npm run check` detecta sintaxe inválida, caminhos incorretos, ciclos e dependências da camada financeira na interface.
 
 ## Limites
 

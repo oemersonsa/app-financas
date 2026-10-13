@@ -11,9 +11,15 @@ npm ci
 npm start
 ```
 
+O comando `npm start` compila os componentes Vue antes de iniciar o servidor. Para compilar separadamente, execute `npm run build`. Vue e os arquivos da aplicação são servidos localmente, sem depender de CDN no navegador.
+
 Acesse `http://localhost:8000` no seu computador. No desenvolvimento, o cliente oficial `@libsql/client` usa SQLite em `data/meu-bolso.sqlite3`. Reiniciar o servidor e limpar o navegador preservam os registros. Use `node server.js --port 8001 --data-dir /caminho/dados` para alterar porta ou diretório.
 
-O banco local da versão Python é migrado automaticamente, preservando os registros e o arquivo original. Não execute os dois servidores simultaneamente sobre o mesmo banco. Para levar registros locais ao Turso, exporte um JSON pelo menu Backup na aplicação local e importe na aplicação hospedada. A importação substitui os registros existentes; confirme o destino antes de importar.
+O banco local da versão Python é migrado automaticamente, preservando os registros e o arquivo original. Não execute os dois servidores simultaneamente sobre o mesmo banco. Para levar registros locais ao Turso, exporte um JSON pelo menu Backup na aplicação local e importe na aplicação hospedada. A importação adiciona lançamentos pelo identificador, sem duplicar nem sobrescrever os existentes.
+
+## Prévia no navegador integrado
+
+Em ambientes cloud, execute `npm run preview` na pasta do projeto. Esse comando compila a interface e escuta em `0.0.0.0:8000`, permitindo acesso pelo navegador integrado. O login permanece obrigatório: quando não há senha configurada, credenciais aleatórias são criadas em `.env.preview`, arquivo privado ignorado pelo Git. Consulte esse arquivo localmente para entrar. A prévia usa o mesmo banco local e não altera a configuração de produção. Se já estiver rodando, o comando informa o endereço e encerra sem iniciar outra instância. Para outra porta, use `npm run preview -- --port 8001`.
 
 ## Render + Turso
 
@@ -21,7 +27,7 @@ A configuração segue o padrão de `oemersonsa/dashboard`: Node.js no Render e 
 
 1. Crie um banco no Turso para as finanças. Recomenda-se um banco separado do dashboard.
 2. Obtenha a URL `libsql://...` e um token do banco no painel do Turso.
-3. No Render, conecte este repositório usando o Blueprint `render.yaml`, ou crie um Web Service com build `npm ci && npm run check && npm test`, início `npm start` e health check `/health`.
+3. No Render, conecte este repositório usando o Blueprint `render.yaml`, ou crie um Web Service com build `npm ci && npm run build && npm run check && npm test`, início `npm start` e health check `/health`.
 4. Configure as variáveis abaixo no painel do Render. Guarde token e senha apenas nos campos de ambiente privados, nunca no Git ou no chat.
 5. Após a implantação, acesse a URL HTTPS fornecida pelo Render, entre pela tela de login e confirme um lançamento após recarregar e em outro navegador.
 
@@ -38,6 +44,10 @@ A configuração segue o padrão de `oemersonsa/dashboard`: Node.js no Render e 
 Em produção, a inicialização exige Turso e senha. Uma configuração ausente impede a inicialização, evitando gravar finanças no disco temporário da hospedagem. As tabelas são criadas automaticamente como `financas_state` e `financas_backups`.
 
 O Blueprint indica o plano gratuito do Render. Esse plano pode suspender o serviço quando ocioso e demorar no primeiro acesso; confira as condições e limites atuais de Render e Turso. O banco remoto preserva os dados durante reinícios do serviço. GitHub Pages e um servidor somente estático não executam esta API.
+
+## Interface Vue
+
+O painel usa Vue 3 com componentes para lançamentos, resumo, gráfico de categorias, entradas e despesas do ano e vencimentos pendentes do mês. Os valores vêm da API: nenhum registro de demonstração é inserido. No celular, o saldo aparece primeiro e a navegação fica na parte inferior. O seletor de mês, os filtros e a busca controlam os lançamentos exibidos.
 
 ## Lançamentos
 
@@ -60,7 +70,7 @@ A senha de acesso continua obrigatória em produção. Não é necessário criar
 
 A tela confirma salvamento somente após resposta do banco. Falha de rede mantém o formulário aberto. Revisões impedem que uma aba antiga sobrescreva dados de outro dispositivo.
 
-Cada gravação mantém as últimas 30 versões em `financas_backups`, na mesma transação dos registros. Falha ao gravar o histórico cancela a alteração. Para recuperar uma versão, consulte `revision`, `created_at` e `document` dessa tabela no Turso; salve o conteúdo de `document` como JSON e importe pelo menu Backup. Essa recuperação exige acesso administrativo ao banco.
+Cada gravação mantém as últimas 30 versões em `financas_backups`, na mesma transação dos registros. Falha ao gravar o histórico cancela a alteração. Para recuperar uma versão, consulte `revision`, `created_at` e `document` dessa tabela no Turso; salve o conteúdo de `document` como JSON. A importação pela interface combina lançamentos e preserva identificadores existentes; restaurar integralmente uma versão exige acesso administrativo ao banco e atualização do documento atual.
 
 O menu Backup também exporta JSON para guardar fora do serviço. O histórico no mesmo banco ajuda a recuperar alterações, mas não protege contra exclusão do banco inteiro; mantenha exportações externas. Registros antigos no navegador são importados quando o banco está vazio.
 
