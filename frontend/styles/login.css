@@ -20,3 +20,14 @@ input:focus-visible, button:focus-visible { outline: 3px solid #397c8959; outlin
 #loginError { color: #9d4641; font-size: 13px; padding-bottom: 16px; }
 .footer-note { text-align: center; font-size: 11px; color: var(--muted); margin-top: 26px; }
 @media (max-width: 480px) { .login-card { padding: 30px 24px; border-radius: 26px; } h1 { font-size: 30px; } }
+.auth-tabs { display: flex; gap: 5px; padding: 4px; margin-top: 24px; border-radius: 12px; background: #e5edf1; }
+.auth-tabs button { flex: 1; border: 0; background: transparent; border-radius: 9px; padding: 11px; color: #546d7d; font: inherit; font-size: 13px; cursor: pointer; }
+.auth-tabs .active { background: #fff; color: #286471; box-shadow: 0 2px 8px #39546910; font-weight: 650; }
+#nameField label, #confirmField label { display: block; font-size: 12px; font-weight: 650; margin: 18px 0 8px; }
+.password-hint { font-size: 11px; color: var(--muted); margin-top: 8px; }
+:root[data-theme="dark"] .auth-tabs { background: #132634; }
+:root[data-theme="dark"] .auth-tabs button { color: #b5cbd8; }
+:root[data-theme="dark"] .auth-tabs .active { background: #345667; color: #d7f3f6; }
+
+body.login-page { padding-top: calc(76px + env(safe-area-inset-top)); }
+#confirmField { margin-bottom: 20px; }

@@ -14,3 +14,14 @@
   .workspace { padding-left: max(18px, env(safe-area-inset-left)); padding-right: max(18px, env(safe-area-inset-right)); padding-bottom: calc(80px + env(safe-area-inset-bottom)); }
   dialog { max-height: calc(100dvh - 24px - env(safe-area-inset-top) - env(safe-area-inset-bottom)); }
 }
+.account-name { font-size: 11px; color: var(--muted); max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* iOS focuses fields smaller than 16px by zooming. Keep pinch zoom enabled. */
+@media (max-width: 900px), (pointer: coarse) {
+  :root body :is(input:not([type=checkbox]):not([type=radio]), select, textarea) { font-size: 16px; }
+  .theme-control select { width: 82px; }
+}
+@media (max-width: 650px) {
+  .topbar { gap: 8px; }
+  .topbar .theme-control > span { display: none; }
+  .account-name { display: none; }
+}

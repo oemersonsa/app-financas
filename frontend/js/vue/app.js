@@ -292,6 +292,7 @@ createApp({
           >{{state.status}}</span
         >
         <div class="topbar-actions">
+          <span v-if="state.user" class="account-name" :title="state.user.username">{{state.user.name}}</span>
           <ThemeControl />
           <button
             class="icon-button mobile-backup"

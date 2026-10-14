@@ -38,8 +38,8 @@ A configuração segue o padrão de `oemersonsa/dashboard`: Node.js no Render e 
 | `PORT` | Fornecida automaticamente pelo Render |
 | `TURSO_DATABASE_URL` | URL `libsql://...` do banco de finanças |
 | `TURSO_AUTH_TOKEN` | Token privado do banco |
-| `FINANCAS_USER` | Usuário de acesso; padrão `usuario` |
-| `FINANCAS_PASSWORD` | Senha privada para acessar a aplicação |
+| `FINANCAS_USER` | Usuário proprietário original; padrão `usuario` |
+| `FINANCAS_PASSWORD` | Senha privada do proprietário original |
 
 Em produção, a inicialização exige Turso e senha. Uma configuração ausente impede a inicialização, evitando gravar finanças no disco temporário da hospedagem. As tabelas são criadas automaticamente como `financas_state` e `financas_backups`.
 
@@ -74,21 +74,27 @@ O seletor Tema no topo do painel e na tela de login oferece Sistema, Claro e Esc
 
 Categorias principais: Moradia, Alimentação, Assinaturas, Lazer, Pensão, Dívidas de cartão e Empréstimos. Também é possível criar categorias.
 
-## Acesso e sessão
+## Acesso, cadastro e sessão
 
-Entre pela tela de login usando `FINANCAS_USER` e `FINANCAS_PASSWORD` configurados no Render. Não há cadastro público. A opção "Manter conectado" mantém o acesso por 30 dias; desmarcada, por um dia. O botão Sair encerra a sessão. Senha incorreta aparece como mensagem no formulário, sem janela de autenticação do navegador.
+A tela de acesso oferece **Entrar** e **Criar conta**. O cadastro pede nome, usuário (3 a 40 letras, números, pontos, traços ou sublinhados), senha (10 a 128 caracteres) e confirmação. Cada nova conta começa vazia e tem lançamentos, categorias, revisões e histórico de backup próprios. Usuários são normalizados para minúsculas; nomes de usuário não podem se repetir. Senhas cadastradas são armazenadas com scrypt e salt aleatório, nunca em texto puro.
 
-As sessões persistem no Turso em `financas_sessions`; apenas o hash do token é armazenado no banco. O cookie é HttpOnly, SameSite=Lax e Secure em produção. Trocar usuário ou senha invalida as sessões anteriores. Reiniciar ou atualizar o serviço preserva sessões válidas. Tentativas repetidas de login são limitadas por instância.
+O usuário proprietário configurado por `FINANCAS_USER` e `FINANCAS_PASSWORD` continua entrando normalmente e mantém os lançamentos e backups existentes. As tabelas antigas não são substituídas nem copiadas para contas novas; o nome do proprietário fica reservado. Essas variáveis continuam obrigatórias em produção. Em desenvolvimento sem senha, o modo local permanece acessível apenas em loopback; contas cadastradas também podem ser testadas pela tela de login. Para expor a prévia, use `npm run preview`, que exige credenciais.
 
-A senha de acesso continua obrigatória em produção. Não é necessário criar outra variável nem configurar tabelas manualmente para a nova tela.
+A opção **Manter conectado** mantém uma sessão de login por 30 dias; desmarcada, por um dia. Um novo cadastro inicia uma sessão de um dia. Sair revoga a sessão no servidor. As sessões de contas cadastradas ficam em `financas_user_sessions`; as do proprietário continuam em `financas_sessions`. Apenas hashes dos tokens são armazenados. O cookie é HttpOnly, SameSite=Lax e Secure em produção. Trocar as credenciais do proprietário invalida somente suas sessões; reinícios preservam sessões válidas.
+
+Cadastros e tentativas de login são limitados por instância. Não há recuperação de senha ou alteração de credenciais pela interface nesta versão. Os dados da API são selecionados pelo usuário autenticado, nunca por um identificador enviado no documento. O cabeçalho `X-Meu-Bolso-Account` confirma a conta esperada nas gravações de usuários cadastrados; uma aba antiga é recarregada quando a conta é trocada em outra aba. A migração automática de registros antigos do navegador permanece disponível somente para o proprietário/modo local, evitando importar dados de outra pessoa em um novo cadastro.
+
+## Safari e ícone no iPhone
+
+Campos de entrada, seletores e buscas usam pelo menos 16 px no celular, evitando o zoom automático do Safari ao focar. O zoom manual continua permitido. O apple-touch-icon explicita PNG de 180×180, com endereço atualizado e arquivos de compatibilidade na raiz. Após o deploy, se o iPhone ainda mostrar o ícone antigo ou genérico, remova o atalho instalado e adicione novamente pelo Safari; o iOS pode manter o ícone da instalação anterior.
 
 ## Salvamento e recuperação
 
 A tela confirma salvamento somente após resposta do banco. Falha de rede mantém o formulário aberto. Revisões impedem que uma aba antiga sobrescreva dados de outro dispositivo.
 
-Cada gravação mantém as últimas 30 versões em `financas_backups`, na mesma transação dos registros. Falha ao gravar o histórico cancela a alteração. Para recuperar uma versão, consulte `revision`, `created_at` e `document` dessa tabela no Turso; salve o conteúdo de `document` como JSON. A importação pela interface combina lançamentos e preserva identificadores existentes; restaurar integralmente uma versão exige acesso administrativo ao banco e atualização do documento atual.
+Cada gravação mantém as últimas 30 versões em `financas_backups` para o proprietário ou em `financas_user_backups` por usuário cadastrado, na mesma transação dos registros. Falha ao gravar o histórico cancela a alteração. Para recuperar uma versão, consulte `revision`, `created_at` e `document` dessa tabela no Turso; salve o conteúdo de `document` como JSON. A importação pela interface combina lançamentos e preserva identificadores existentes; restaurar integralmente uma versão exige acesso administrativo ao banco e atualização do documento atual.
 
-O menu Backup também exporta JSON para guardar fora do serviço. O histórico no mesmo banco ajuda a recuperar alterações, mas não protege contra exclusão do banco inteiro; mantenha exportações externas. Registros antigos no navegador são importados quando o banco está vazio.
+O menu Backup também exporta JSON para guardar fora do serviço. O histórico no mesmo banco ajuda a recuperar alterações, mas não protege contra exclusão do banco inteiro; mantenha exportações externas. Registros antigos no navegador são importados somente para o proprietário/modo local quando seu banco está vazio.
 
 ## Desenvolvimento e testes
 

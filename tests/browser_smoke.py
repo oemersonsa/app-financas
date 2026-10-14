@@ -246,6 +246,72 @@ class BrowserTests(unittest.TestCase):
         self.page.locator('nav a[href="#overview"]:visible').click()
         expect(self.page.locator('#totalExpense')).to_contain_text('1.630,00')
 
+    def register_user(self, page, username, name='Conta teste'):
+        page.goto(self.url + '/login.html')
+        page.get_by_role('button',name='Criar conta',exact=True).click()
+        page.locator('#name').fill(name)
+        page.locator('#username').fill(username)
+        page.locator('#password').fill('test-password-123')
+        page.locator('#confirmPassword').fill('test-password-123')
+        page.locator('.login-submit').click()
+        self.ready(page)
+
+    def test_registration_login_isolation_and_no_legacy_import(self):
+        self.add('Registro do proprietário', '99', date='2026-10-14')
+        original=self.store.read()['data']['transactions']
+        self.page.evaluate('(rows)=>localStorage.setItem("finances_transactions_v3",JSON.stringify(rows))',original)
+        self.register_user(self.page,'alice','Alice')
+        expect(self.page.locator('.account-name')).to_have_text('Alice')
+        self.assertEqual(self.page.evaluate('async()=> (await (await fetch("/api/state")).json()).data.transactions'),[])
+        self.add('Registro da Alice','12',date='2026-10-14')
+        self.assertEqual(self.store.read()['data']['transactions'][0]['description'],'Registro do proprietário')
+        fresh=self.browser.new_context()
+        try:
+            other=fresh.new_page()
+            self.register_user(other,'bob','Bob')
+            self.assertEqual(other.evaluate('async()=> (await (await fetch("/api/state")).json()).data.transactions'),[])
+        finally:fresh.close()
+        self.page.locator('#logoutButton').click()
+        expect(self.page.locator('#loginForm')).to_be_visible()
+        self.page.locator('#username').fill('alice')
+        self.page.locator('#password').fill('test-password-123')
+        self.page.locator('.login-submit').click()
+        self.ready(self.page)
+        self.assertEqual(self.page.evaluate('async()=> (await (await fetch("/api/state")).json()).data.transactions[0].description'),'Registro da Alice')
+
+    def test_account_switch_blocks_stale_form_and_ios_fields_use_16px(self):
+        self.register_user(self.page,'alice','Alice')
+        self.page.locator('#addButton').click()
+        self.page.locator('#description').fill('Não gravar na conta da Bob')
+        self.page.locator('#amount').fill('45')
+        other=self.context.new_page()
+        try:
+            # Registration changes the shared session cookie while Alice has an open form.
+            other.goto(self.url + '/login.html')
+            other.evaluate('async()=>fetch("/api/logout",{method:"POST"})')
+            self.register_user(other,'bob','Bob')
+            self.page.locator('button[type=submit]').click()
+            self.ready(self.page)
+            expect(self.page.locator('.account-name')).to_have_text('Bob')
+            self.assertEqual(self.page.evaluate('async()=> (await (await fetch("/api/state")).json()).data.transactions'),[])
+        finally:other.close()
+        self.page.set_viewport_size({'width':390,'height':844})
+        self.page.get_by_role('button',name='Novo lançamento',exact=True).click()
+        for selector in ['#description','#amount','#date','#category','#schedule']:
+            expect(self.page.locator(selector)).to_have_css('font-size','16px')
+        viewport=self.page.locator('meta[name="viewport"]').get_attribute('content')
+        self.assertNotIn('user-scalable=no',viewport)
+        self.assertNotIn('maximum-scale',viewport)
+        self.page.get_by_role('button',name='Fechar formulário').click()
+        self.page.locator('#logoutButton').click()
+        self.page.get_by_role('button',name='Criar conta',exact=True).click()
+        for selector in ['#name','#username','#password','#confirmPassword','#loginTheme']:
+            expect(self.page.locator(selector)).to_have_css('font-size','16px')
+        icon=self.page.locator('link[rel="apple-touch-icon"]')
+        expect(icon).to_have_attribute('sizes','180x180')
+        self.assertIn('v2',icon.get_attribute('href'))
+        self.assertTrue(self.page.evaluate('document.documentElement.scrollWidth<=innerWidth'))
+
     def wait_for_worker(self, page):
         page.evaluate("""async () => {
             await navigator.serviceWorker.ready;

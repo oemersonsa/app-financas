@@ -11,14 +11,14 @@
   <link rel="stylesheet" href="/styles/theme.css" />
   <script src="/js/theme.js"></script>
   <link rel="manifest" href="/manifest.webmanifest">
-  <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+  <link rel="apple-touch-icon" sizes="180x180" type="image/png" href="/icons/apple-touch-icon-v2.png">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Meu bolso">
   <link rel="stylesheet" href="/styles/pwa.css">
   <script type="module" src="/js/pwa.js"></script>
 </head>
-<body>
+<body class="login-page">
   <label class="theme-control login-theme">
     <span aria-hidden="true">◐</span>
     <select id="loginTheme" aria-label="Tema"><option value="system">Sistema</option><option value="light">Claro</option><option value="dark">Escuro</option></select>
@@ -27,16 +27,20 @@
     <a href="/" class="login-brand" aria-label="Meu bolso">m<span>·</span></a>
     <p class="eyebrow">MEU BOLSO</p>
     <h1>Seu dinheiro,<br /><span>seu espaço.</span></h1>
-    <p class="intro">Entre para cuidar das suas finanças com calma.</p>
+    <p class="intro" id="loginIntro">Entre para cuidar das suas finanças com calma.</p>
+    <div class="auth-tabs" role="group" aria-label="Acesso à conta"><button type="button" data-auth-mode="login" class="active" aria-pressed="true">Entrar</button><button type="button" data-auth-mode="register" aria-pressed="false">Criar conta</button></div>
     <form id="loginForm">
+      <div id="nameField" hidden><label for="name">Seu nome</label><input id="name" name="name" autocomplete="name" minlength="2" maxlength="100" disabled></div>
       <label for="username">Usuário</label>
-      <input id="username" name="username" autocomplete="username" required maxlength="200" autofocus />
+      <input id="username" name="username" autocomplete="username" autocapitalize="none" spellcheck="false" required maxlength="200" autofocus />
       <label for="password">Senha</label>
       <div class="password-field">
         <input id="password" name="password" type="password" autocomplete="current-password" required maxlength="1000" />
         <button type="button" id="showPassword" aria-controls="password" aria-pressed="false">Mostrar</button>
       </div>
-      <label class="remember"><input id="remember" type="checkbox" checked /> Manter conectado por 30 dias</label>
+      <p id="passwordHint" class="password-hint" hidden>Use de 10 a 128 caracteres. Letras, números e símbolos ajudam a proteger sua conta.</p>
+      <div id="confirmField" hidden><label for="confirmPassword">Confirmar senha</label><input id="confirmPassword" type="password" autocomplete="new-password" maxlength="128" disabled></div>
+      <label class="remember" id="rememberField"><input id="remember" type="checkbox" checked /> Manter conectado por 30 dias</label>
       <p id="loginError" role="alert" hidden></p>
       <button class="login-submit" type="submit">Entrar</button>
     </form>

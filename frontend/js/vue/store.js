@@ -14,6 +14,9 @@ export const state = reactive({
   error: false,
   month: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
   authRequired: false,
+  accountId: null,
+  accountType: "local",
+  user: null,
   corruptLegacy: null,
 });
 let timer;
@@ -32,9 +35,14 @@ const categoryNames = (items = []) =>
 async function request(url, options = {}) {
   const response = await fetch(url, {
     ...options,
+    headers: { ...options.headers, ...(state.accountId && url === "/api/state" ? { "X-Meu-Bolso-Account": state.accountId } : {}) },
     signal: AbortSignal.timeout(15000),
     cache: "no-store",
   });
+  if (response.status === 409 && (await response.clone().json()).code === "account_changed") {
+    state.transactions = []; state.ready = false;
+    location.replace("/"); throw new Error("account changed");
+  }
   if (response.status === 401) {
     location.replace("/login.html");
     throw new Error("session");
@@ -119,12 +127,18 @@ export async function materialize() {
 }
 export async function initialize() {
   try {
+    const sessionResponse = await request("/api/session");
+    if (!sessionResponse.ok) throw new Error("session unavailable");
+    const session = await sessionResponse.json();
+    state.authRequired = session.authRequired; state.user = session.user;
+    state.accountType = session.accountType;
+    state.accountId = session.user?.id || (session.accountType === "owner" ? "owner" : "local");
     const response = await request("/api/state");
     if (!response.ok) throw new Error("read");
     adopt(await response.json());
     state.ready = true;
     try {
-      const raw = localStorage.getItem("finances_transactions_v3");
+      const raw = state.accountType === "registered" ? null : localStorage.getItem("finances_transactions_v3");
       if (raw) {
         let legacy;
         try {

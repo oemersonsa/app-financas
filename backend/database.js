@@ -47,3 +47,30 @@ export async function openStore({ url, authToken, file = 'data/meu-bolso.sqlite3
     close() { client.close(); },
   };
 }
+
+// Identity comes exclusively from the authenticated session, never the request body.
+export function userStore(client, userId) {
+  return {
+    async read() {
+      const { rows } = await client.execute({ sql: 'SELECT revision,document FROM financas_user_state WHERE user_id=?', args: [userId] });
+      if (!rows.length) throw new Error('Account state unavailable');
+      return { revision: Number(rows[0].revision), data: JSON.parse(rows[0].document) };
+    },
+    async save(data, expected) {
+      const tx = await client.transaction('write');
+      try {
+        const { rows } = await tx.execute({ sql: 'SELECT revision,document FROM financas_user_state WHERE user_id=?', args: [userId] });
+        if (!rows.length) throw new Error('Account state unavailable');
+        const revision = Number(rows[0].revision);
+        if (revision !== expected) { await tx.rollback(); return null; }
+        const document = JSON.stringify(data);
+        await tx.execute({ sql: 'INSERT OR IGNORE INTO financas_user_backups(user_id,revision,document) VALUES(?,?,?)', args: [userId, revision, rows[0].document] });
+        await tx.execute({ sql: 'INSERT INTO financas_user_backups(user_id,revision,document) VALUES(?,?,?)', args: [userId, revision + 1, document] });
+        await tx.execute({ sql: 'UPDATE financas_user_state SET revision=?,document=? WHERE user_id=?', args: [revision + 1, document, userId] });
+        await tx.execute({ sql: 'DELETE FROM financas_user_backups WHERE user_id=? AND revision NOT IN (SELECT revision FROM financas_user_backups WHERE user_id=? ORDER BY revision DESC LIMIT 30)', args: [userId, userId] });
+        await tx.commit(); return revision + 1;
+      } catch (error) { await tx.rollback(); throw error; }
+      finally { tx.close(); }
+    },
+  };
+}

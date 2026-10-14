@@ -42,7 +42,7 @@ Coloque cálculos em `domain/`, estilos de estrutura em `styles/vue.css` e super
 
 ## Limites
 
-Há um único conjunto de finanças por implantação, protegido por usuário, senha e sessão. A tela de login não fornece cadastro público ou recuperação de senha; as credenciais são administradas nas variáveis do Render. O cliente carrega dados ao abrir e detecta conflitos ao gravar; não há sincronização em tempo real nem contas separadas. O banco remoto permite reinícios sem perda de dados, mas a estrutura de documento único não foi projetada para um sistema de grande volume. Histórico no mesmo banco não substitui uma cópia externa.
+Cada conta cadastrada tem seu próprio documento de finanças. O cadastro é público, mas não há recuperação ou alteração de senha pela interface. O proprietário original usa as credenciais administradas nas variáveis do Render e conserva seu documento antigo. O cliente carrega dados ao abrir e detecta conflitos ao gravar; não há sincronização em tempo real. O banco remoto permite reinícios sem perda de dados, mas a estrutura de documento único não foi projetada para um sistema de grande volume. Histórico no mesmo banco não substitui uma cópia externa.
 
 ## Superfícies de vidro
 
@@ -59,3 +59,9 @@ Há um único conjunto de finanças por implantação, protegido por usuário, s
 `js/pwa.js` registra o worker em contexto seguro e trata a instalação opcional. No iPhone, usa orientação para o menu Compartilhar, sem simular um prompt nativo indisponível. O login pode instalar o PWA antes da autenticação.
 
 `backend/pwa.js` mantém a lista explícita de arquivos públicos. A compilação gera `frontend/sw.js` a partir de `scripts/service-worker.js`, com uma versão derivada do template e dos arquivos públicos. O worker usa rede primeiro e oferece `offline.html` para navegações quando a rede falha ou o servidor retorna 5xx. A API, as gravações, as páginas autenticadas e o bundle Vue não entram no cache. Os recursos públicos usam o cache apenas quando a rede não está disponível. A ativação limpa exclusivamente versões anteriores de `meu-bolso-public-*`. Não há sincronização de lançamentos offline.
+
+## Contas e compatibilidade
+
+`backend/accounts.js` cria usuários com senha scrypt/salt e sessões persistentes em `financas_users` e `financas_user_sessions`. As tabelas `financas_user_state` e `financas_user_backups` usam `user_id` na chave, com revisão e histórico de 30 versões independentes. `userStore` deriva a identidade da sessão autenticada; parâmetros ou campos do corpo nunca escolhem outro usuário. Todas as gravações e backups são transacionais.
+
+O proprietário original conserva `financas_state`, `financas_backups` e `financas_sessions`; não há migração destrutiva. Sua conta configurada fica reservada no cadastro. A interface busca a sessão antes dos dados; novos cadastros não importam automaticamente registros antigos do navegador. Gravações cadastradas exigem `X-Meu-Bolso-Account` correspondente à sessão, impedindo que uma aba antiga (inclusive de uma versão anterior) grave na conta aberta em outra aba. Ao restaurar páginas do histórico do Safari, a aplicação recarrega e revalida o acesso.

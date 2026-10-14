@@ -26,3 +26,6 @@ async function ready() {
 }
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', ready, { once: true });
 else ready();
+
+// Safari can restore a page from memory after logout or account switching.
+window.addEventListener('pageshow', event => { if (event.persisted) location.reload(); });

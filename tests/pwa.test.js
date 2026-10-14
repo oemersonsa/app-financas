@@ -40,7 +40,7 @@ test('standalone manifest and iPhone icons have correct MIME types and dimension
   assert.equal(manifest.start_url, '/');
   assert.equal(manifest.scope, '/');
   assert.ok(manifest.icons.some(icon => icon.purpose.includes('maskable')));
-  for (const [path, size] of [['/icons/icon-192.png', 192], ['/icons/icon-512.png', 512], ['/icons/apple-touch-icon.png', 180]]) {
+  for (const [path, size] of [['/icons/icon-192.png', 192], ['/icons/icon-512.png', 512], ['/icons/apple-touch-icon.png', 180], ['/icons/apple-touch-icon-v2.png', 180], ['/apple-touch-icon.png', 180], ['/apple-touch-icon-precomposed.png', 180]]) {
     const icon = await get(path);
     assert.equal(icon.headers.get('content-type'), 'image/png');
     const bytes = Buffer.from(await icon.arrayBuffer());
