@@ -51,3 +51,11 @@ Há um único conjunto de finanças por implantação, protegido por usuário, s
 ## Tema
 
 `js/theme.js` é carregado antes do bundle para aplicar o tema sem clarão inicial e compartilhar a preferência entre painel e login. Somente a chave `meu-bolso-theme` é salva no navegador; dados financeiros continuam no banco. O modo Sistema acompanha `prefers-color-scheme`, e eventos de armazenamento atualizam as outras abas. `styles/theme.css` adapta a paleta e o `color-scheme` também cobre controles nativos. Esses dois arquivos são públicos para funcionar antes da autenticação.
+
+## PWA e cache
+
+`manifest.webmanifest` define identidade, escopo `/` e exibição standalone. Ícones PNG incluem 192 e 512 pixels (com área segura maskable) e um apple-touch-icon de 180 pixels. Painel, login e tela offline contêm os metadados do iPhone; `styles/pwa.css` adapta as áreas seguras e a navegação inferior.
+
+`js/pwa.js` registra o worker em contexto seguro e trata a instalação opcional. No iPhone, usa orientação para o menu Compartilhar, sem simular um prompt nativo indisponível. O login pode instalar o PWA antes da autenticação.
+
+`backend/pwa.js` mantém a lista explícita de arquivos públicos. A compilação gera `frontend/sw.js` a partir de `scripts/service-worker.js`, com uma versão derivada do template e dos arquivos públicos. O worker usa rede primeiro e oferece `offline.html` para navegações quando a rede falha ou o servidor retorna 5xx. A API, as gravações, as páginas autenticadas e o bundle Vue não entram no cache. Os recursos públicos usam o cache apenas quando a rede não está disponível. A ativação limpa exclusivamente versões anteriores de `meu-bolso-public-*`. Não há sincronização de lançamentos offline.

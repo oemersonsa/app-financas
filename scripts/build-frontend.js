@@ -1,5 +1,7 @@
 import { build } from "esbuild";
-import { readFile } from "node:fs/promises";
+import { createHash } from "node:crypto";
+import { pwaAssets } from "../backend/pwa.js";
+import { readFile, writeFile } from "node:fs/promises";
 import { compileTemplate } from "vue/compiler-sfc";
 
 // Validate Vue expressions before shipping the runtime-compiled templates.
@@ -26,3 +28,10 @@ await build({
     __VUE_PROD_HYDRATION_MISMATCH_DETAILS__: "false",
   },
 });
+
+// A content-based version refreshes the public offline cache on each relevant release.
+const template = await readFile("scripts/service-worker.js", "utf8");
+const version = createHash("sha256").update(template);
+for (const path of pwaAssets) version.update(await readFile(`frontend${path}`));
+const worker = template.replace("__VERSION__", version.digest("hex").slice(0, 16)).replace("__ASSETS__", JSON.stringify(pwaAssets));
+await writeFile("frontend/sw.js", worker);

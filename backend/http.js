@@ -1,6 +1,7 @@
 import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
+import { pwaAssets } from './pwa.js';
 import { publicFiles } from './assets.js';
 import { credentialVersion } from './auth.js';
 import { createSessions, sessionToken } from './sessions.js';
@@ -9,7 +10,7 @@ import { sameOrigin, readJson } from './requests.js';
 import { validDocument } from './validation.js';
 
 const root = fileURLToPath(new URL('../frontend/', import.meta.url));
-const loginAssets = new Set(['/login.html', '/styles/base.css', '/styles/login.css', '/js/login.js', '/js/theme.js', '/styles/theme.css']);
+const loginAssets = new Set(['/login.html', '/styles/base.css', '/styles/login.css', '/js/login.js', '/js/theme.js', '/styles/theme.css', ...pwaAssets, '/sw.js']);
 export async function createApplication(store, { password, username = 'usuario', secureCookies = process.env.NODE_ENV === 'production' } = {}) {
   const files = await publicFiles(root);
   const sessions = password ? await createSessions(store.client, credentialVersion(username, password)) : null;
@@ -39,8 +40,9 @@ export async function createApplication(store, { password, username = 'usuario',
         if (path === '/api/state') { reply(200, await store.read()); return; }
         if (files.has(path)) {
           const file = files.get(path);
-          const type = file.endsWith('.html') ? 'text/html' : file.endsWith('.css') ? 'text/css' : 'text/javascript';
-          reply(200, await readFile(file), type + '; charset=utf-8'); return;
+          const extension = file.slice(file.lastIndexOf('.'));
+          const types = { '.html': 'text/html; charset=utf-8', '.css': 'text/css; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.png': 'image/png', '.webmanifest': 'application/manifest+json; charset=utf-8' };
+          reply(200, await readFile(file), types[extension], path === '/sw.js' ? { 'Service-Worker-Allowed': '/' } : {}); return;
         }
       } else if (req.method === 'PUT' && path === '/api/state') {
         const payload = await readJson(req);

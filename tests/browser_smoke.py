@@ -246,6 +246,51 @@ class BrowserTests(unittest.TestCase):
         self.page.locator('nav a[href="#overview"]:visible').click()
         expect(self.page.locator('#totalExpense')).to_contain_text('1.630,00')
 
+    def wait_for_worker(self, page):
+        page.evaluate("""async () => {
+            await navigator.serviceWorker.ready;
+            if (!navigator.serviceWorker.controller) {
+                await new Promise(resolve => navigator.serviceWorker.addEventListener('controllerchange', resolve, {once:true}));
+            }
+        }""")
+
+    def test_pwa_offline_fallback_public_cache_and_reconnect(self):
+        self.wait_for_worker(self.page)
+        self.add('Registro online', '50', date='2026-10-14')
+        paths = self.page.evaluate("""async () => {
+            const result=[];
+            for (const name of await caches.keys()) {
+                for (const request of await (await caches.open(name)).keys()) result.push(new URL(request.url).pathname);
+            }
+            return result;
+        }""")
+        self.assertIn('/offline.html',paths)
+        for private in ['/', '/index.html', '/login.html', '/api/state', '/api/session', '/build/app.js']:
+            self.assertNotIn(private, paths)
+        self.context.set_offline(True)
+        self.page.reload()
+        expect(self.page.get_by_role('heading',name='Vamos reconectar?')).to_be_visible()
+        expect(self.page.locator('html')).to_have_attribute('data-theme','light')
+        self.assertEqual(self.store.read()['data']['transactions'][0]['description'],'Registro online')
+        self.context.set_offline(False)
+        self.page.get_by_role('link',name='Tentar novamente').click()
+        self.ready(self.page)
+        self.assertEqual(len(self.store.read()['data']['transactions']),1)
+
+    def test_pwa_online_assets_remain_fresh_and_api_is_not_cached(self):
+        self.wait_for_worker(self.page)
+        self.page.route('**/api/state', lambda route: route.fulfill(status=503, content_type='application/json', body='{"error":"test"}'))
+        result = self.page.evaluate("async () => (await fetch('/api/state')).status")
+        self.assertEqual(result,503)
+        paths = self.page.evaluate("""async () => {
+            const result=[];
+            for (const name of await caches.keys()) {
+                for (const request of await (await caches.open(name)).keys()) result.push(new URL(request.url).pathname);
+            }
+            return result;
+        }""")
+        self.assertNotIn('/api/state',paths)
+
     def test_theme_system_persistence_and_other_tabs(self):
         self.page.emulate_media(color_scheme='dark')
         expect(self.page.locator('html')).to_have_attribute('data-theme','dark')
@@ -322,6 +367,7 @@ class BrowserTests(unittest.TestCase):
             expect(page).to_have_url(url + '/login.html')
             expect(page.locator('.login-card')).to_have_css('border-radius','26px')
             self.assertTrue(page.evaluate('document.documentElement.scrollWidth <= innerWidth'))
+            self.wait_for_worker(page)
             page.locator('#loginTheme').select_option('dark')
             expect(page.locator('html')).to_have_attribute('data-theme','dark')
             page.locator('#username').fill('emerson')

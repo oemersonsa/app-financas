@@ -1,0 +1,16 @@
+.page-footer { flex-wrap: wrap; }
+.install-hint { font-size: 11px; color: var(--muted); line-height: 1.7; flex-basis: 100%; text-align: center; }
+#installApp { border: 1px solid currentColor; border-radius: 8px; padding: 7px 12px; font: inherit; color: inherit; background: transparent; cursor: pointer; }
+#installApp[hidden], #installHint[hidden] { display: none; }
+@media (display-mode: standalone) {
+  .workspace { padding-top: env(safe-area-inset-top); }
+  .sidebar { padding-top: calc(38px + env(safe-area-inset-top)); padding-bottom: calc(38px + env(safe-area-inset-bottom)); }
+  .mobile-nav { padding-left: max(7px, env(safe-area-inset-left)); padding-right: max(7px, env(safe-area-inset-right)); }
+  .workspace main { padding-bottom: env(safe-area-inset-bottom); }
+  .login-card { margin-top: env(safe-area-inset-top); margin-bottom: env(safe-area-inset-bottom); }
+  .login-theme { top: calc(20px + env(safe-area-inset-top)); right: max(20px, env(safe-area-inset-right)); }
+}
+@media (max-width: 650px) {
+  .workspace { padding-left: max(18px, env(safe-area-inset-left)); padding-right: max(18px, env(safe-area-inset-right)); padding-bottom: calc(80px + env(safe-area-inset-bottom)); }
+  dialog { max-height: calc(100dvh - 24px - env(safe-area-inset-top) - env(safe-area-inset-bottom)); }
+}
