@@ -15,6 +15,7 @@ export const state = reactive({
   month: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
   authRequired: false,
   accountId: null,
+  maxStateBytes: 10 * 1024 * 1024,
   accountType: "local",
   user: null,
   corruptLegacy: null,
@@ -77,20 +78,21 @@ export async function save(transactions, categories = state.categories) {
     );
     return false;
   }
+  const body = JSON.stringify({
+    revision: state.revision,
+    data: { version: 5, transactions, customCategories: categories.map(name => ({ name })) },
+  });
+  if (new TextEncoder().encode(body).length > state.maxStateBytes) {
+    notify(`Os dados ultrapassam o limite de ${Math.floor(state.maxStateBytes / 1024 / 1024)} MB desta hospedagem. Nenhuma alteração foi salva.`, true);
+    return false;
+  }
   state.saving = true;
   state.status = "Salvando no servidor…";
   try {
     const response = await request("/api/state", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        revision: state.revision,
-        data: {
-          version: 5,
-          transactions,
-          customCategories: categories.map((name) => ({ name })),
-        },
-      }),
+      body,
     });
     if (response.status === 409) {
       const current = await request("/api/state");
@@ -131,6 +133,7 @@ export async function initialize() {
     if (!sessionResponse.ok) throw new Error("session unavailable");
     const session = await sessionResponse.json();
     state.authRequired = session.authRequired; state.user = session.user;
+    if (Number.isSafeInteger(session.maxStateBytes) && session.maxStateBytes > 0) state.maxStateBytes = session.maxStateBytes;
     state.accountType = session.accountType;
     state.accountId = session.user?.id || (session.accountType === "owner" ? "owner" : "local");
     const response = await request("/api/state");
@@ -207,7 +210,7 @@ export async function logout() {
 }
 export async function importBackup(file) {
   try {
-    if (file.size > 10 * 1024 * 1024) throw new Error("size");
+    if (file.size > state.maxStateBytes) throw new Error("size");
     const parsed = JSON.parse(await file.text());
     if (
       !Array.isArray(parsed.transactions) ||
@@ -232,7 +235,7 @@ export async function importBackup(file) {
     return true;
   } catch {
     notify(
-      "Backup inválido. Escolha um JSON exportado pela aplicação (até 10 MB).",
+      `Backup inválido. Escolha um JSON exportado pela aplicação (até ${Math.floor(state.maxStateBytes / 1024 / 1024)} MB).`,
       true,
     );
     return false;

@@ -10,7 +10,8 @@
     "prestart": "npm run build",
     "pretest": "npm run build",
     "preview": "node scripts/start-preview.js",
-    "prepreview": "npm run build"
+    "prepreview": "npm run build",
+    "build:vercel": "node scripts/build-vercel.js"
   },
   "engines": {
     "node": ">=22"

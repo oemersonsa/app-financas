@@ -1,3 +1,4 @@
+import { createRateLimiter } from './rate-limit.js';
 import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
@@ -13,14 +14,19 @@ import { validDocument } from './validation.js';
 
 const root = fileURLToPath(new URL('../frontend/', import.meta.url));
 const loginAssets = new Set(['/login.html', '/styles/base.css', '/styles/login.css', '/js/login.js', '/js/theme.js', '/styles/theme.css', ...pwaAssets, '/sw.js']);
-export async function createApplication(store, { password, username = 'usuario', secureCookies = process.env.NODE_ENV === 'production' } = {}) {
+export async function createRequestHandler(store, { password, username = 'usuario', secureCookies = process.env.NODE_ENV === 'production', maxStateBytes = 10 * 1024 * 1024, maxResponseBytes = Infinity } = {}) {
   const files = await publicFiles(root);
   const sessions = password ? await createSessions(store.client, credentialVersion(username, password)) : null;
   const accounts = await createAccounts(store.client, username);
-  const login = loginRoutes(sessions, { username, password, secureCookies, accounts });
-  return createServer(async (req, res) => {
+  const limits = await createRateLimiter(store.client);
+  const login = loginRoutes(sessions, { username, password, secureCookies, accounts, limits, maxStateBytes });
+  return async (req, res) => {
     const reply = (status, body, type = 'application/json; charset=utf-8', headers = {}) => {
-      const content = Buffer.isBuffer(body) ? body : Buffer.from(JSON.stringify(body));
+      let content = Buffer.isBuffer(body) ? body : Buffer.from(JSON.stringify(body));
+      if (content.length > maxResponseBytes) {
+        status = 413; type = 'application/json; charset=utf-8';
+        content = Buffer.from(JSON.stringify({ error: 'Os dados excedem o limite de resposta desta hospedagem.' }));
+      }
       res.writeHead(status, { 'Content-Type': type, 'Content-Length': content.length, 'Cache-Control': 'no-store',
         'X-Content-Type-Options': 'nosniff', 'Referrer-Policy': 'same-origin', 'X-Frame-Options': 'DENY', ...headers });
       res.end(content);
@@ -54,8 +60,11 @@ export async function createApplication(store, { password, username = 'usuario',
           reply(200, await readFile(file), types[extension], path === '/sw.js' ? { 'Service-Worker-Allowed': '/' } : {}); return;
         }
       } else if (req.method === 'PUT' && path === '/api/state') {
-        const payload = await readJson(req);
+        const payload = await readJson(req, maxStateBytes);
         if (!Number.isSafeInteger(payload?.revision) || payload.revision < 0 || !validDocument(payload.data)) { reply(400, { error: 'Dados inválidos.' }); return; }
+        if (Number.isFinite(maxResponseBytes) && Buffer.byteLength(JSON.stringify({ revision: payload.revision + 1, data: payload.data })) > maxResponseBytes) {
+          reply(413, { error: 'Os dados excedem o limite desta hospedagem. Nenhuma alteração foi salva.' }); return;
+        }
         const revision = await financialStore.save(payload.data, payload.revision);
         reply(revision === null ? 409 : 200, revision === null ? { error: 'Os dados mudaram em outra aba ou dispositivo. Atualize antes de salvar.' } : { revision }); return;
       }
@@ -63,5 +72,9 @@ export async function createApplication(store, { password, username = 'usuario',
     } catch (error) {
       reply(error.status || 503, { error: error.status ? error.message : 'Não foi possível acessar o banco de dados. Tente novamente.' });
     }
-  });
+  };
+}
+
+export async function createApplication(store, options) {
+  return createServer(await createRequestHandler(store, options));
 }

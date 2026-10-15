@@ -1,0 +1,12 @@
+.git
+.env
+.env.*
+node_modules
+data
+*.sqlite3
+*.sqlite3-wal
+*.sqlite3-shm
+tests
+__pycache__
+.vercel
+vercel-public

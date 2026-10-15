@@ -343,11 +343,13 @@ class BrowserTests(unittest.TestCase):
         self.ready(self.page)
         self.assertEqual(len(self.store.read()['data']['transactions']),1)
 
-    def test_pwa_online_assets_remain_fresh_and_api_is_not_cached(self):
+    def test_pwa_api_is_not_available_from_cache_while_offline(self):
         self.wait_for_worker(self.page)
-        self.page.route('**/api/state', lambda route: route.fulfill(status=503, content_type='application/json', body='{"error":"test"}'))
-        result = self.page.evaluate("async () => (await fetch('/api/state')).status")
-        self.assertEqual(result,503)
+        self.context.set_offline(True)
+        result = self.page.evaluate("async () => { try { return (await fetch('/api/state')).status; } catch { return 0; } }")
+        self.assertEqual(result,0)
+        self.context.set_offline(False)
+        self.assertEqual(self.page.evaluate("async () => (await fetch('/api/state')).status"),200)
         paths = self.page.evaluate("""async () => {
             const result=[];
             for (const name of await caches.keys()) {

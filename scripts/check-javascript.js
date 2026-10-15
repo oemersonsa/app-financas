@@ -9,7 +9,7 @@ function filesUnder(directory) {
       : [join(directory, entry.name)],
   );
 }
-const files = ["server.js", ...filesUnder("backend"), ...filesUnder("frontend/js")].filter((name) => name.endsWith(".js"));
+const files = ["server.js", ...filesUnder("backend"), ...filesUnder("api"), ...filesUnder("frontend/js")].filter((name) => name.endsWith(".js"));
 const graph = new Map();
 for (const file of files) {
   const result = spawnSync(process.execPath, ["--check", file], {

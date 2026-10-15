@@ -32,7 +32,7 @@ As regras em `domain/` recebem dados e retornam resultados, sem acessar tela, AP
 
 Os gráficos exibem os registros existentes, sem materializar contas fixas de meses não visitados. O gráfico anual apresenta entradas e despesas registradas por mês, com uma tabela acessível. Vencimentos mostram despesas pendentes do mês selecionado, incluindo atrasadas. A importação combina identificadores, sem sobrescrever registros existentes; não é uma restauração integral.
 
-`http.js` limita requisições a 10 MB, valida origem e entrega exclusivamente arquivos do frontend. Sessões ficam no banco; `/health` informa somente disponibilidade. `database.js` grava documento e histórico em uma transação, com revisão para rejeitar sobrescritas concorrentes. Desenvolvimento usa SQLite; produção exige Turso.
+`http.js` usa limites de requisição configuráveis (10 MiB no servidor tradicional e 4 MiB na Vercel), valida origem e entrega exclusivamente arquivos do frontend. Sessões ficam no banco; `/health` informa somente disponibilidade. `database.js` grava documento e histórico em uma transação, com revisão para rejeitar sobrescritas concorrentes. Desenvolvimento usa SQLite; produção exige Turso.
 
 `npm start` e `npm test` compilam o frontend automaticamente. `npm run build` pode ser executado separadamente e valida as expressões dos templates Vue antes de gerar o bundle. A entrada está em `js/app.js`; o navegador carrega somente o bundle gerado. As camadas de manipulação manual de HTML foram substituídas por componentes Vue.
 
@@ -65,3 +65,11 @@ Cada conta cadastrada tem seu próprio documento de finanças. O cadastro é pú
 `backend/accounts.js` cria usuários com senha scrypt/salt e sessões persistentes em `financas_users` e `financas_user_sessions`. As tabelas `financas_user_state` e `financas_user_backups` usam `user_id` na chave, com revisão e histórico de 30 versões independentes. `userStore` deriva a identidade da sessão autenticada; parâmetros ou campos do corpo nunca escolhem outro usuário. Todas as gravações e backups são transacionais.
 
 O proprietário original conserva `financas_state`, `financas_backups` e `financas_sessions`; não há migração destrutiva. Sua conta configurada fica reservada no cadastro. A interface busca a sessão antes dos dados; novos cadastros não importam automaticamente registros antigos do navegador. Gravações cadastradas exigem `X-Meu-Bolso-Account` correspondente à sessão, impedindo que uma aba antiga (inclusive de uma versão anterior) grave na conta aberta em outra aba. Ao restaurar páginas do histórico do Safari, a aplicação recarrega e revalida o acesso.
+
+## Entrada serverless
+
+`createRequestHandler` inicializa as regras HTTP sem abrir uma porta; `createApplication` envolve esse handler no servidor Node para Render e desenvolvimento. `api/index.js` exporta o adapter de `backend/serverless.js`, com inicialização única por instância quente, nova tentativa após falha e exigência de Turso e senha. JSON em stream ou previamente interpretado pela plataforma segue as mesmas verificações de origem, tipo e tamanho.
+
+`vercel.json` direciona as rotas para a Function e inclui os arquivos de `frontend/` no pacote, sem publicar páginas por fora do controle de acesso. A Function limita entrada e resposta a 4 MiB; a interface recebe o limite no perfil de sessão e verifica o documento completo antes de salvar. O build serverless mantém um diretório estático vazio, e o desenvolvimento continua usando SQLite e o servidor tradicional.
+
+`backend/rate-limit.js` usa UPSERT atômico em `financas_auth_limits`. Reservas de autenticação são compartilhadas por todas as instâncias, sem depender de timers; logins válidos liberam a reserva, e falhas permanecem até expirar a janela. O cache do PWA continua exclusivamente público e as respostas privadas usam `Cache-Control: no-store`.

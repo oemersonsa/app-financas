@@ -21,6 +21,12 @@ O banco local da versão Python é migrado automaticamente, preservando os regis
 
 Em ambientes cloud, execute `npm run preview` na pasta do projeto. Esse comando compila a interface e escuta em `0.0.0.0:8000`, permitindo acesso pelo navegador integrado. O login permanece obrigatório: quando não há senha configurada, credenciais aleatórias são criadas em `.env.preview`, arquivo privado ignorado pelo Git. Consulte esse arquivo localmente para entrar. A prévia usa o mesmo banco local e não altera a configuração de produção. Se já estiver rodando, o comando informa o endereço e encerra sem iniciar outra instância. Para outra porta, use `npm run preview -- --port 8001`.
 
+## Vercel + Turso
+
+O projeto também pode ser implantado como Vercel Functions. Importe este repositório com preset **Other**, mantenha a raiz do repositório e configure `TURSO_DATABASE_URL`, `TURSO_AUTH_TOKEN`, `FINANCAS_USER` e `FINANCAS_PASSWORD` no painel. `vercel.json` define o build e as rotas; não use `npm start` na Vercel. A função exige banco remoto e preserva os dados ao apontar para o mesmo Turso.
+
+Consulte [docs/vercel.md](docs/vercel.md) para as etapas, configuração de Production/Preview, validação no iPhone e limite de payload de 4 MiB. A configuração anterior do Render continua disponível.
+
 ## Render + Turso
 
 A configuração segue o padrão de `oemersonsa/dashboard`: Node.js no Render e `@libsql/client` conectado ao Turso. Nenhum disco persistente é necessário no Render.
@@ -82,7 +88,7 @@ O usuário proprietário configurado por `FINANCAS_USER` e `FINANCAS_PASSWORD` c
 
 A opção **Manter conectado** mantém uma sessão de login por 30 dias; desmarcada, por um dia. Um novo cadastro inicia uma sessão de um dia. Sair revoga a sessão no servidor. As sessões de contas cadastradas ficam em `financas_user_sessions`; as do proprietário continuam em `financas_sessions`. Apenas hashes dos tokens são armazenados. O cookie é HttpOnly, SameSite=Lax e Secure em produção. Trocar as credenciais do proprietário invalida somente suas sessões; reinícios preservam sessões válidas.
 
-Cadastros e tentativas de login são limitados por instância. Não há recuperação de senha ou alteração de credenciais pela interface nesta versão. Os dados da API são selecionados pelo usuário autenticado, nunca por um identificador enviado no documento. O cabeçalho `X-Meu-Bolso-Account` confirma a conta esperada nas gravações de usuários cadastrados; uma aba antiga é recarregada quando a conta é trocada em outra aba. A migração automática de registros antigos do navegador permanece disponível somente para o proprietário/modo local, evitando importar dados de outra pessoa em um novo cadastro.
+Cadastros e tentativas de login são limitados por contadores persistidos no Turso, compartilhados entre instâncias. Não há recuperação de senha ou alteração de credenciais pela interface nesta versão. Os dados da API são selecionados pelo usuário autenticado, nunca por um identificador enviado no documento. O cabeçalho `X-Meu-Bolso-Account` confirma a conta esperada nas gravações de usuários cadastrados; uma aba antiga é recarregada quando a conta é trocada em outra aba. A migração automática de registros antigos do navegador permanece disponível somente para o proprietário/modo local, evitando importar dados de outra pessoa em um novo cadastro.
 
 ## Safari e ícone no iPhone
 
