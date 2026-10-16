@@ -1,11 +1,17 @@
 import { build } from "esbuild";
 import { createHash } from "node:crypto";
 import { pwaAssets } from "../backend/pwa.js";
-import { readFile, writeFile } from "node:fs/promises";
+import { readFile, writeFile, readdir } from "node:fs/promises";
 import { compileTemplate } from "vue/compiler-sfc";
 
 // Validate Vue expressions before shipping the runtime-compiled templates.
-for (const file of ["frontend/js/vue/app.js", "frontend/js/vue/components.js"]) {
+async function componentFiles(directory) {
+  const entries = await readdir(directory, { withFileTypes: true });
+  return (await Promise.all(entries.map(entry => entry.isDirectory()
+    ? componentFiles(`${directory}/${entry.name}`)
+    : entry.name.endsWith('.js') ? [`${directory}/${entry.name}`] : []))).flat();
+}
+for (const file of await componentFiles("frontend/js/vue")) {
   const source = await readFile(file, "utf8");
   for (const [index, match] of [...source.matchAll(/template:\s*`([\s\S]*?)`/g)].entries()) {
     const result = compileTemplate({ source: match[1], filename: file, id: `${file}-${index}` });

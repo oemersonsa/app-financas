@@ -2,6 +2,7 @@ import { reactive } from "vue";
 import { mainCategories } from "../domain/categories.js";
 import { validTransaction } from "../domain/validation.js";
 import { recurringCopies } from "../domain/recurrence.js";
+import { createApi } from "../core/api.js";
 
 export const state = reactive({
   transactions: [],
@@ -33,23 +34,14 @@ const categoryNames = (items = []) =>
   items
     .map((item) => (typeof item === "string" ? item : item?.name))
     .filter((name) => typeof name === "string" && name.length);
-async function request(url, options = {}) {
-  const response = await fetch(url, {
-    ...options,
-    headers: { ...options.headers, ...(state.accountId && url === "/api/state" ? { "X-Meu-Bolso-Account": state.accountId } : {}) },
-    signal: AbortSignal.timeout(15000),
-    cache: "no-store",
-  });
-  if (response.status === 409 && (await response.clone().json()).code === "account_changed") {
+const request = createApi({
+  accountId: () => state.accountId,
+  onAccountChanged() {
     state.transactions = []; state.ready = false;
-    location.replace("/"); throw new Error("account changed");
-  }
-  if (response.status === 401) {
-    location.replace("/login.html");
-    throw new Error("session");
-  }
-  return response;
-}
+    location.replace("/");
+  },
+  onUnauthorized: () => location.replace("/login.html"),
+});
 function adopt(document) {
   if (
     !Number.isSafeInteger(document.revision) ||

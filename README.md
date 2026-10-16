@@ -115,6 +115,8 @@ Os testes cobrem regras financeiras, API, banco, transações, concorrência, au
 python3 -m unittest discover -s tests -p browser_smoke.py -v
 ```
 
+Para medir leitura e gravação com históricos sintéticos, execute `npm run benchmark:state`. O comando usa bancos temporários e não acessa as finanças reais. Veja a metodologia e os resultados em [docs/state-performance.md](docs/state-performance.md).
+
 Esse teste usa `/usr/bin/chromium` e bancos temporários. A execução local exercita o driver oficial com banco em arquivo; validar o banco Turso remoto requer suas variáveis de ambiente.
 
 Consulte [docs/architecture.md](docs/architecture.md) para a organização e limites da aplicação.

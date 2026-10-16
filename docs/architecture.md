@@ -11,11 +11,12 @@ app-financas/
 │   ├── login.html             # Login independente
 │   ├── js/
 │   │   ├── vue/
-│   │   │   ├── app.js         # Navegação, painel, parcelas e diálogos
-│   │   │   ├── components.js  # Linhas de lançamento e gráficos
+│   │   │   ├── app.js         # Montagem e coordenação entre componentes
+│   │   │   ├── components/    # Resumo, listas, gráficos e navegação
+│   │   │   ├── dialogs/       # Formulário, exclusão, backup e conta
 │   │   │   ├── form.js        # Formulário e regras de edição
-│   │   │   └── store.js       # Estado reativo, API, migração e backup
-│   │   ├── core/             # Datas e formatação
+│   │   │   └── store.js       # Estado reativo, persistência e migração
+│   │   ├── core/             # Datas, formatação e transporte HTTP
 │   │   └── domain/           # Regras financeiras puras compartilhadas
 │   ├── build/                # Bundle gerado, ignorado pelo Git
 │   └── styles/               # Interface Vue e login
@@ -28,17 +29,21 @@ app-financas/
 
 As regras em `domain/` recebem dados e retornam resultados, sem acessar tela, API ou estado global. O backend reutiliza a validação pura de lançamentos. O estado reativo e a persistência ficam em `vue/store.js`; componentes renderizam valores calculados, usando interpolação Vue para escapar descrições e categorias. Somente os ícones SVG definidos pelo projeto usam HTML direto.
 
+`app.js` coordena navegação, filtros compartilhados e ações entre componentes. `TransactionList` controla a apresentação da busca e dos filtros por props e eventos; `MonthlySummary` e `UpcomingPayments` recebem apenas os lançamentos do mês; `InstallmentsPage` calcula seus grupos localmente. Os diálogos expõem somente `open()` ao coordenador e mantêm seus refs e comportamentos internos. O cliente em `core/api.js` recebe callbacks para obter a conta atual e tratar sessões, sem importar o estado Vue. `domain/summary.js` mantém os cálculos de totais, filtros e rótulos de vencimento fora dos templates.
+
 `vue/form.js` reaproveita as regras de parcelamento e recorrência. Falhas mantêm o formulário aberto; revisões rejeitam gravações de abas antigas e atualizam os dados para permitir nova tentativa. Não há confirmação otimista de salvamento. O estado do banco permanece como `{revision, data: {version, transactions, customCategories}}`.
 
 Os gráficos exibem os registros existentes, sem materializar contas fixas de meses não visitados. O gráfico anual apresenta entradas e despesas registradas por mês, com uma tabela acessível. Vencimentos mostram despesas pendentes do mês selecionado, incluindo atrasadas. A importação combina identificadores, sem sobrescrever registros existentes; não é uma restauração integral.
 
 `http.js` usa limites de requisição configuráveis (10 MiB no servidor tradicional e 4 MiB na Vercel), valida origem e entrega exclusivamente arquivos do frontend. Sessões ficam no banco; `/health` informa somente disponibilidade. `database.js` grava documento e histórico em uma transação, com revisão para rejeitar sobrescritas concorrentes. Desenvolvimento usa SQLite; produção exige Turso.
 
-`npm start` e `npm test` compilam o frontend automaticamente. `npm run build` pode ser executado separadamente e valida as expressões dos templates Vue antes de gerar o bundle. A entrada está em `js/app.js`; o navegador carrega somente o bundle gerado. As camadas de manipulação manual de HTML foram substituídas por componentes Vue.
+`npm start` e `npm test` compilam o frontend automaticamente. `npm run build` pode ser executado separadamente e percorre todos os componentes e diálogos em `vue/`, validando as expressões dos templates antes de gerar o bundle. A entrada está em `js/app.js`; o navegador carrega somente o bundle gerado. As camadas de manipulação manual de HTML foram substituídas por componentes Vue.
 
 ## Evolução
 
-Coloque cálculos em `domain/`, estilos de estrutura em `styles/vue.css` e superfícies de vidro em `styles/glass.css` e alterações de persistência no backend. Extraia responsabilidades quando um módulo começar a misturar assuntos; arquivos perto de 100–250 linhas são uma orientação, não uma regra absoluta. `npm run check` detecta sintaxe inválida, caminhos incorretos, ciclos e dependências da camada financeira na interface.
+Coloque cálculos em `domain/`, componentes em `vue/components/`, diálogos em `vue/dialogs/`, ajustes do painel em `styles/dashboard.css` e alterações de persistência no backend. Extraia responsabilidades quando um módulo começar a misturar assuntos; arquivos perto de 100–250 linhas são uma orientação, não uma regra absoluta. `npm run check` detecta sintaxe inválida, caminhos incorretos, ciclos e dependências da camada financeira na interface.
+
+O comando `npm run benchmark:state` mede o modelo atual com históricos sintéticos e bancos temporários isolados. A metodologia, os resultados e os critérios para uma futura migração por lançamento estão em [state-performance.md](state-performance.md). Ele não consulta os dados ou as credenciais de produção.
 
 ## Limites
 
