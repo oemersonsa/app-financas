@@ -46,7 +46,9 @@ Cada conta cadastrada tem seu próprio documento de finanças. O cadastro é pú
 
 ## Superfícies de vidro
 
-`styles/glass.css` acrescenta transparência, desfoque, saturação e reflexos às superfícies. Controles pequenos recebem reflexos de posição do mouse por `vue/glass.js`, limitados a uma atualização por frame. Os eventos e frames são removidos ao desmontar a interface. O movimento respeita `prefers-reduced-motion`; transparência reduzida e cores forçadas têm alternativas de CSS. Navegadores sem desfoque mantêm superfícies mais opacas. O efeito aproxima o visual do vidro sem simular refração óptica do fundo.
+O painel atual aplica `styles/dashboard.css` após os estilos de estrutura, tema e PWA. As superfícies de dados são opacas; a transparência fica na navegação lateral e inferior. O resumo diferencia saldo previsto, entradas, despesas pagas e valores a pagar. No celular, os vencimentos precedem os lançamentos. `CategoryIcon` compartilha símbolos SVG e cores de `domain/categories.js` entre lançamentos, vencimentos e parcelamentos; o gráfico reutiliza as mesmas cores. Os menus de três pontos preservam as ações de editar, pagar e excluir, e Configurações/Conta concentra tema e backup.
+
+`styles/glass.css` e `vue/glass.js` preservam a implementação anterior de vidro como referência, mas não são carregados pelo painel atual. O movimento respeita `prefers-reduced-motion`; transparência reduzida mantém a navegação opaca.
 
 ## Tema
 

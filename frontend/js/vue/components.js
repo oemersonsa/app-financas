@@ -2,26 +2,32 @@ import { computed, ref, onMounted, onUnmounted } from "vue";
 import { svg } from "../ui/icons.js";
 import { money } from "../core/format.js";
 import { isPaid } from "../domain/installments.js";
+import { categoryStyle } from "../domain/categories.js";
 
 export const Icon = {
   props: ["name"],
   setup: () => ({ svg }),
   template: '<span class="icon" v-html="svg(name)"></span>',
 };
-export const TransactionRow = {
+export const CategoryIcon = {
   components: { Icon },
+  props: ["category", "income"],
+  setup(props) {
+    const appearance = computed(() => categoryStyle(props.income ? "Salário" : props.category || "Outros"));
+    return { appearance };
+  },
+  template: `<span class="category-icon" :style="{'--category-color':appearance[1],color:appearance[1],backgroundColor:appearance[1]+'18'}"><Icon :name="appearance[0]" /></span>`,
+};
+export const TransactionRow = {
+  components: { Icon, CategoryIcon },
   props: ["item", "busy", "installment"],
   emits: ["edit", "paid", "delete"],
-  setup: () => ({ money, isPaid }),
+  setup: () => ({ money, isPaid, categoryStyle }),
   template: `<li class="transaction-item">
-    <span
-      class="transaction-symbol"
-      :class="item.type === 'income' ? 'income' : 'expense'"
-      ><Icon :name="item.type === 'income' ? 'in' : 'out'"
-    /></span>
+    <CategoryIcon :category="item.category" :income="item.type==='income'" />
     <div class="transaction-info">
       <h3>
-        {{item.description}}<small v-if="installment">
+        {{item.description}}<small v-if="installment || item.totalInstallments>1">
           · {{item.installmentNumber}}/{{item.totalInstallments}}</small
         >
       </h3>
@@ -30,14 +36,19 @@ export const TransactionRow = {
         <span class="row-category">· {{item.category || 'Outros'}}</span>
       </p>
     </div>
+    <span class="transaction-date">{{new Date(item.rawDate + 'T12:00:00').toLocaleDateString('pt-BR')}}</span>
+    <span class="transaction-category"><i class="dot" :style="{background:categoryStyle(item.category || 'Outros')[1]}"></i>{{item.category || 'Outros'}}</span>
+    <span class="transaction-status badge" :class="isPaid(item) ? 'paid' : 'pending'">{{item.type === 'income' ? 'Recebido' : isPaid(item) ? 'Pago' : 'Pendente'}}</span>
     <div class="transaction-value">
-      <strong :class="{positive:item.type === 'income'}"
+      <strong :class="{positive:item.type === 'income',negative:item.type !== 'income'}"
         >{{item.type === 'income' ? '+' : '−'}} {{money(item.amount)}}</strong
       ><span class="badge" :class="isPaid(item) ? 'paid' : 'pending'"
         >{{item.type === 'income' ? 'Recebido' : isPaid(item) ? 'Pago' : 'Pendente'}}</span
       >
     </div>
-    <div class="row-actions">
+    <details class="row-menu" name="transaction-actions" @keydown.esc="$event.currentTarget.open=false">
+    <summary class="icon-button" :aria-label="'Ações de ' + item.description"><Icon name="more" /></summary>
+    <div class="row-actions" @click="$event.currentTarget.parentElement.open=false">
       <button
         v-if="item.type !== 'income'"
         class="icon-button"
@@ -65,6 +76,7 @@ export const TransactionRow = {
         <Icon name="trash" />
       </button>
     </div>
+    </details>
   </li>`,
 };
 export const CategoryChart = {
@@ -100,7 +112,7 @@ export const CategoryChart = {
       return sorted.map(([name, cents], index) => ({
         name,
         cents,
-        color: colors[index],
+        color: name === 'Demais categorias' ? colors[index] : categoryStyle(name)[1],
       }));
     });
     const total = computed(() =>

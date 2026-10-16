@@ -8,7 +8,6 @@ import {
   logout,
   importBackup,
 } from "./store.js";
-import { useGlassReflection } from "./glass.js";
 import { useTransactionForm } from "./form.js";
 import {
   Icon,
@@ -16,6 +15,7 @@ import {
   CategoryChart,
   AnnualChart,
   ThemeControl,
+  CategoryIcon,
 } from "./components.js";
 import { money } from "../core/format.js";
 import { monthKey, localDate } from "../core/dates.js";
@@ -27,14 +27,14 @@ import {
 } from "../domain/installments.js";
 
 createApp({
-  components: { Icon, TransactionRow, CategoryChart, AnnualChart, ThemeControl },
+  components: { Icon, TransactionRow, CategoryChart, AnnualChart, ThemeControl, CategoryIcon },
   setup() {
-    useGlassReflection();
     const page = ref("overview"),
       filter = ref("all"),
       search = ref(""),
       dialog = ref(null),
       backupDialog = ref(null),
+      accountDialog = ref(null),
       deleteDialog = ref(null),
       deleting = ref(null),
       importFile = ref(null);
@@ -61,6 +61,8 @@ createApp({
     const pending = computed(() =>
       items.value.filter((item) => item.type !== "income" && !isPaid(item)),
     );
+    const paidExpenses = computed(() => sum(items.value.filter(item => item.type !== 'income' && isPaid(item))));
+    const pendingAmount = computed(() => sum(pending.value));
     const filtered = computed(() =>
       items.value
         .filter(
@@ -217,6 +219,7 @@ createApp({
       search,
       dialog,
       backupDialog,
+      accountDialog,
       deleteDialog,
       deleting,
       importFile,
@@ -225,6 +228,8 @@ createApp({
       income,
       expenses,
       pending,
+      paidExpenses,
+      pendingAmount,
       filtered,
       visible,
       upcoming,
@@ -271,16 +276,12 @@ createApp({
           href="#parcelas"
           :class="{active:page==='parcelas'}"
           :aria-current="page==='parcelas' ? 'page' : undefined"
-          ><Icon name="receipt" />Parcelas</a
+          ><Icon name="card" />Parcelamentos</a
         >
-        <button id="backupButton" @click="backupDialog.showModal()">
-          <Icon name="download" />Backup
-        </button>
       </nav>
       <div class="sidebar-footer">
-        <span></span>
-        <p>Mais controle<br />para o seu hoje<br />e um futuro mais leve.</p>
-        <small><Icon name="lock" />Seu dinheiro, seu espaço.</small>
+        <button id="backupButton" @click="backupDialog.showModal()"><Icon name="cloud" />Backup</button>
+        <button @click="accountDialog.showModal()"><Icon name="settings" />Configurações</button>
       </div>
     </aside>
     <div class="workspace">
@@ -293,7 +294,7 @@ createApp({
         >
         <div class="topbar-actions">
           <span v-if="state.user" class="account-name" :title="state.user.username">{{state.user.name}}</span>
-          <ThemeControl />
+          <button class="icon-button account-button" aria-label="Abrir configurações da conta" @click="accountDialog.showModal()"><Icon name="user" /></button>
           <button
             class="icon-button mobile-backup"
             aria-label="Backup"
@@ -311,60 +312,70 @@ createApp({
         </div>
       </header>
       <main>
-        <section class="page-heading">
+        <section class="page-heading" :class="{'installments-heading':page==='parcelas'}">
           <div>
-            <p class="eyebrow">CADA REAL NO SEU LUGAR</p>
             <h1>
-              {{page==='parcelas' ? 'Um passo de cada vez' : page==='transactions' ? 'Cada movimento, bem cuidado' : 'Seu mês em equilíbrio'}}
+              {{page==='parcelas' ? 'Parcelamentos' : page==='transactions' ? 'Lançamentos' : 'Visão geral'}}
             </h1>
             <p>
-              {{page==='parcelas' ? 'Suas compras, parcelas e próximos pagamentos.' : page==='transactions' ? 'Encontre, edite e organize seus lançamentos.' : 'Acompanhe cada real com clareza.'}}
+              {{page==='parcelas' ? 'Suas compras, parcelas e próximos pagamentos.' : page==='transactions' ? 'Encontre, edite e organize seus lançamentos.' : 'Seu dinheiro, com clareza.'}}
             </p>
           </div>
-          <button
-            id="addButton"
-            class="button primary"
-            :disabled="!state.ready || state.saving"
-            @click="open(null,page==='parcelas' ? 'installments' : 'once')"
-          >
-            <Icon name="plus" />Novo lançamento
-          </button>
-        </section>
-        <section v-show="page!=='parcelas'" class="month-toolbar">
-          <div class="month-control">
-            <button
-              id="previousMonth"
-              class="icon-button"
-              aria-label="Mês anterior"
-              :disabled="state.saving"
-              @click="changeMonth(-1)"
+          <div class="heading-controls">
+            <div v-show="page!=='parcelas'" class="month-toolbar">
+              <div class="month-control">
+                <button
+                  id="previousMonth"
+                  class="icon-button"
+                  aria-label="Mês anterior"
+                  :disabled="state.saving"
+                  @click="changeMonth(-1)"
+                >
+                  <Icon name="left" /></button
+                ><label class="month-picker"
+                  ><Icon name="calendar" /><span id="monthLabel">{{monthLabel}}</span
+                  ><input
+                    type="month"
+                    aria-label="Selecionar mês"
+                    :value="monthKey(state.month)"
+                    :disabled="state.saving"
+                    @change="chooseMonth" /></label
+                ><button
+                  id="nextMonth"
+                  class="icon-button"
+                  aria-label="Próximo mês"
+                  :disabled="state.saving"
+                  @click="changeMonth(1)"
+                >
+                  <Icon name="right" />
+                </button>
+              </div>
+              <button class="text-button" @click="today">Ir para este mês</button>
+            </div>
+                <button
+              id="addButton"
+              class="button primary"
+              :disabled="!state.ready || state.saving"
+              @click="open(null,page==='parcelas' ? 'installments' : 'once')"
             >
-              <Icon name="left" /></button
-            ><label class="month-picker"
-              ><Icon name="grid" /><span id="monthLabel">{{monthLabel}}</span
-              ><input
-                type="month"
-                aria-label="Selecionar mês"
-                :value="monthKey(state.month)"
-                :disabled="state.saving"
-                @change="chooseMonth" /></label
-            ><button
-              id="nextMonth"
-              class="icon-button"
-              aria-label="Próximo mês"
-              :disabled="state.saving"
-              @click="changeMonth(1)"
-            >
-              <Icon name="right" />
+              <Icon name="plus" />Novo lançamento
             </button>
           </div>
-          <button class="text-button" @click="today">Ir para este mês</button>
         </section>
+
         <section
           v-show="page!=='parcelas'"
-          class="summary"
+          class="summary dashboard-summary"
           aria-label="Resumo do mês"
         >
+          <article class="summary-card balance-card">
+            <span class="summary-symbol"><Icon name="chart" /></span>
+            <div>
+              <p>Saldo previsto do mês</p>
+              <strong id="balanceDisplay">{{money(income-expenses)}}</strong>
+              <small>Entradas menos todas as despesas</small>
+            </div>
+          </article>
           <article class="summary-card income-card">
             <span class="summary-symbol income"><Icon name="in" /></span>
             <div>
@@ -379,21 +390,17 @@ createApp({
           <article class="summary-card expense-card">
             <span class="summary-symbol expense"><Icon name="out" /></span>
             <div>
-              <p>Despesas</p>
-              <strong id="totalExpense">{{money(expenses)}}</strong
-              ><small
-                >{{pending.length ? pending.length+' pagamento(s) pendente(s)' : 'Nenhum pagamento pendente'}}</small
-              >
+              <p>Despesas pagas</p>
+              <strong id="paidExpenses">{{money(paidExpenses)}}</strong>
+              <small>Total do mês: <span id="totalExpense">{{money(expenses)}}</span></small>
             </div>
           </article>
-          <article class="summary-card balance-card">
-            <span class="summary-symbol"><Icon name="chart" /></span>
+          <article class="summary-card pending-card">
+            <span class="summary-symbol pending"><Icon name="clock" /></span>
             <div>
-              <p>Saldo do mês</p>
-              <strong id="balanceDisplay">{{money(income-expenses)}}</strong
-              ><small
-                >{{income-expenses>0 ? 'Seu mês está no positivo!' : income-expenses<0 ? 'Hora de olhar os próximos passos.' : 'Cada registro faz a diferença.'}}</small
-              >
+              <p>A pagar</p>
+              <strong id="pendingAmount">{{money(pendingAmount)}}</strong>
+              <small>{{pending.length}} pagamento(s) pendente(s)</small>
             </div>
           </article>
         </section>
@@ -406,7 +413,7 @@ createApp({
             <section class="panel transactions-panel">
               <div class="panel-heading">
                 <h2>
-                  {{page==='overview' ? 'Lançamentos recentes' : 'Seus lançamentos'}}
+                  Lançamentos
                 </h2>
                 <a
                   v-if="page==='overview'"
@@ -441,6 +448,7 @@ createApp({
                     aria-label="Buscar lançamento"
                 /></label>
               </div>
+              <div class="transaction-columns" aria-hidden="true"><span>Descrição</span><span>Data</span><span>Categoria</span><span>Status</span><span>Valor</span><span></span></div>
               <ul id="transactionList" class="transaction-list">
                 <TransactionRow
                   v-for="item in visible"
@@ -471,15 +479,8 @@ createApp({
                 </button>
               </div>
             </section>
-            <AnnualChart
-              v-if="page==='overview'"
-              :transactions="state.transactions"
-              :year="state.month.getFullYear()"
-              :selected="state.month.getMonth()"
-            />
           </div>
           <div v-if="page==='overview'" class="right-column">
-            <CategoryChart :items="items" />
             <section class="panel upcoming-panel">
               <div class="panel-heading">
                 <h2>Próximos vencimentos</h2>
@@ -488,22 +489,20 @@ createApp({
                 </button>
               </div>
               <div v-for="item in upcoming" :key="item.id" class="upcoming-row">
-                <span class="upcoming-symbol"
-                  ><Icon :name="item.totalInstallments>1 ? 'receipt' : 'grid'"
-                /></span>
+                <CategoryIcon :category="item.category" />
                 <div>
                   <button class="upcoming-title" @click="open(item)">
-                    {{item.description}}
+                    {{item.description}}<span v-if="item.totalInstallments>1"> · {{item.installmentNumber}}/{{item.totalInstallments}}</span>
                   </button>
                   <p>
-                    {{new Date(item.rawDate+'T12:00:00').toLocaleDateString('pt-BR',{day:'2-digit',month:'short'})}}
+                    {{new Date(item.rawDate+'T12:00:00').toLocaleDateString('pt-BR')}} · {{item.category || 'Outros'}}
                   </p>
                 </div>
                 <div class="due-value">
-                  <strong>{{money(item.amount)}}</strong
+                  <strong>− {{money(item.amount)}}</strong
                   ><span
                     class="badge"
-                    :class="item.rawDate<localToday ? 'pending' : 'neutral'"
+                    :class="item.rawDate<localToday ? 'overdue' : 'pending'"
                     >{{dueLabel(item.rawDate)}}</span
                   >
                 </div>
@@ -512,11 +511,9 @@ createApp({
                 Tudo em dia neste mês. Um respiro para o seu bolso.
               </p>
             </section>
-            <div class="gentle-note">
-              <Icon name="leaf" />
-              <p>Pequenos cuidados hoje.<br />Mais tranquilidade amanhã.</p>
-            </div>
+            <CategoryChart :items="items" />
           </div>
+          <AnnualChart v-if="page==='overview'" :transactions="state.transactions" :year="state.month.getFullYear()" :selected="state.month.getMonth()" />
         </div>
         <section id="installmentsPage" v-show="page==='parcelas'">
           <div class="summary installment-summary">
@@ -553,7 +550,7 @@ createApp({
               class="panel installment-plan"
             >
               <summary>
-                <span class="upcoming-symbol"><Icon name="receipt" /></span>
+                <CategoryIcon :category="plan[0].category" />
                 <div>
                   <h2>{{plan[0].description}}</h2>
                   <p>
@@ -639,8 +636,8 @@ createApp({
         <Icon name="plus" /></button
       ><a href="#parcelas" :class="{active:page==='parcelas'}"
         ><Icon name="receipt" /><span>Parcelas</span></a
-      ><button aria-label="Backup" @click="backupDialog.showModal()">
-        <Icon name="download" /><span>Backup</span>
+      ><button aria-label="Conta" @click="accountDialog.showModal()">
+        <Icon name="user" /><span>Conta</span>
       </button>
     </nav>
     <dialog
@@ -819,6 +816,13 @@ createApp({
           {{state.saving ? 'Excluindo…' : 'Excluir'}}
         </button>
       </div>
+    </dialog>
+    <dialog id="accountDialog" ref="accountDialog" aria-labelledby="accountTitle">
+      <div class="dialog-heading"><h2 id="accountTitle">Sua conta</h2><button class="icon-button" aria-label="Fechar configurações" @click="accountDialog.close()"><Icon name="close" /></button></div>
+      <p class="account-profile">{{state.user?.name || 'Meu bolso'}}<small>{{state.user?.username || 'Seu espaço de finanças pessoais'}}</small></p>
+      <div class="account-setting"><span>Aparência</span><ThemeControl /></div>
+      <button class="backup-option" @click="accountDialog.close(); backupDialog.showModal()"><Icon name="cloud" /><span><strong>Backup dos seus dados</strong><small>Exportar ou importar uma cópia</small></span><Icon name="right" /></button>
+      <button v-if="state.authRequired" class="button subtle" @click="logout"><Icon name="user" />Sair da conta</button>
     </dialog>
     <dialog id="backupDialog" ref="backupDialog">
       <div class="dialog-heading">

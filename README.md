@@ -69,7 +69,7 @@ Somente arquivos públicos de instalação e da tela sem conexão entram no cach
 
 ## Tema claro e escuro
 
-O seletor Tema no topo do painel e na tela de login oferece Sistema, Claro e Escuro. Sistema acompanha a preferência do dispositivo; uma escolha manual fica salva somente neste navegador e é sincronizada entre abas. O tema é aplicado antes de carregar a interface e adapta gráficos, formulários, diálogos e o efeito de vidro.
+O seletor Tema em Configurações (ou Conta, no celular) e na tela de login oferece Sistema, Claro e Escuro. Sistema acompanha a preferência do dispositivo; uma escolha manual fica salva somente neste navegador e é sincronizada entre abas. O tema é aplicado antes de carregar a interface e adapta gráficos, formulários e diálogos.
 
 ## Lançamentos
 
